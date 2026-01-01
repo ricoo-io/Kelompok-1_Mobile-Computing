@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.Flow
 interface ExpenseDao {
     
     @Query("""
-        SELECT e.*, c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor
+        SELECT e.id, e.amount, e.name, e.description, e.categoryId, e.date, e.isIncome, e.createdAt,
+               c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor
         FROM expenses e
         INNER JOIN categories c ON e.categoryId = c.id
         ORDER BY e.date DESC
@@ -19,7 +20,8 @@ interface ExpenseDao {
     fun getAllExpensesWithCategory(): Flow<List<ExpenseWithCategory>>
     
     @Query("""
-        SELECT e.*, c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor
+        SELECT e.id, e.amount, e.name, e.description, e.categoryId, e.date, e.isIncome, e.createdAt,
+               c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor
         FROM expenses e
         INNER JOIN categories c ON e.categoryId = c.id
         WHERE e.date BETWEEN :startDate AND :endDate
@@ -28,7 +30,8 @@ interface ExpenseDao {
     fun getExpensesByDateRange(startDate: Long, endDate: Long): Flow<List<ExpenseWithCategory>>
     
     @Query("""
-        SELECT e.*, c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor
+        SELECT e.id, e.amount, e.name, e.description, e.categoryId, e.date, e.isIncome, e.createdAt,
+               c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor
         FROM expenses e
         INNER JOIN categories c ON e.categoryId = c.id
         WHERE e.categoryId = :categoryId AND e.date BETWEEN :startDate AND :endDate
@@ -37,7 +40,8 @@ interface ExpenseDao {
     fun getExpensesByCategory(categoryId: Long, startDate: Long, endDate: Long): Flow<List<ExpenseWithCategory>>
     
     @Query("""
-        SELECT e.*, c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor
+        SELECT e.id, e.amount, e.name, e.description, e.categoryId, e.date, e.isIncome, e.createdAt,
+               c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor
         FROM expenses e
         INNER JOIN categories c ON e.categoryId = c.id
         ORDER BY e.date DESC

@@ -501,7 +501,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
-                                                text = expense.description.ifEmpty { spending.categoryName },
+                                                text = expense.name.ifEmpty { spending.categoryName },
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )

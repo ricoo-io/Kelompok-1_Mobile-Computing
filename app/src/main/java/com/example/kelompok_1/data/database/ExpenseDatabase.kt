@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Expense::class, Category::class, Budget::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class ExpenseDatabase : RoomDatabase() {
@@ -50,6 +50,17 @@ abstract class ExpenseDatabase : RoomDatabase() {
             }
         }
         
+        // Migration from version 2 to 3: add name column and copy description to name
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add name column with existing description as default value
+                db.execSQL("ALTER TABLE expenses ADD COLUMN name TEXT NOT NULL DEFAULT ''")
+                // Copy existing description to name field
+                db.execSQL("UPDATE expenses SET name = description")
+                // Clear description for old records (optional, keeping it as notes)
+            }
+        }
+        
         fun getDatabase(context: Context): ExpenseDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -57,7 +68,7 @@ abstract class ExpenseDatabase : RoomDatabase() {
                     ExpenseDatabase::class.java,
                     "expense_database"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
@@ -77,3 +88,4 @@ abstract class ExpenseDatabase : RoomDatabase() {
         }
     }
 }
+

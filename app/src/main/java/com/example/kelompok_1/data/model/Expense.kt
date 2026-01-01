@@ -21,7 +21,8 @@ data class Expense(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val amount: Double,
-    val description: String,
+    val name: String, // Nama transaksi (wajib)
+    val description: String = "", // Catatan (opsional)
     val categoryId: Long,
     val date: Long, // timestamp in milliseconds
     val isIncome: Boolean = false, // true = income, false = expense

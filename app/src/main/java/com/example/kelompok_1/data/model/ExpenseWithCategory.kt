@@ -6,7 +6,8 @@ package com.example.kelompok_1.data.model
 data class ExpenseWithCategory(
     val id: Long,
     val amount: Double,
-    val description: String,
+    val name: String, // Nama transaksi
+    val description: String, // Catatan (opsional)
     val categoryId: Long,
     val date: Long,
     val isIncome: Boolean = false,

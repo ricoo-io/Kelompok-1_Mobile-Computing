@@ -13,7 +13,8 @@ import java.util.*
 data class ExpenseFormState(
     val editingId: Long? = null,
     val amount: String = "",
-    val description: String = "",
+    val name: String = "", // Nama transaksi (wajib)
+    val description: String = "", // Catatan (opsional)
     val selectedCategoryId: Long? = null,
     val date: Long = System.currentTimeMillis(),
     val isIncome: Boolean = false,
@@ -48,6 +49,7 @@ class ExpenseViewModel(
                         it.copy(
                             editingId = expense.id,
                             amount = expense.amount.toLong().toString(),
+                            name = expense.name,
                             description = expense.description,
                             selectedCategoryId = expense.categoryId,
                             date = expense.date,
@@ -65,6 +67,10 @@ class ExpenseViewModel(
     fun updateAmount(amount: String) {
         val filtered = amount.filter { it.isDigit() }
         _formState.update { it.copy(amount = filtered, error = null) }
+    }
+    
+    fun updateName(name: String) {
+        _formState.update { it.copy(name = name, error = null) }
     }
     
     fun updateDescription(description: String) {
@@ -92,8 +98,8 @@ class ExpenseViewModel(
                 _formState.update { it.copy(error = "Masukkan jumlah yang valid") }
                 return
             }
-            state.description.isBlank() -> {
-                _formState.update { it.copy(error = "Masukkan deskripsi") }
+            state.name.isBlank() -> {
+                _formState.update { it.copy(error = "Masukkan nama transaksi") }
                 return
             }
             state.selectedCategoryId == null -> {
@@ -109,7 +115,8 @@ class ExpenseViewModel(
                 val expense = Expense(
                     id = state.editingId ?: 0,
                     amount = state.amount.toDouble(),
-                    description = state.description,
+                    name = state.name,
+                    description = state.description, // Opsional, bisa kosong
                     categoryId = state.selectedCategoryId!!,
                     date = state.date,
                     isIncome = state.isIncome,

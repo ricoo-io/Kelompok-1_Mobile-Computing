@@ -220,7 +220,7 @@ private fun DailyExpenseItem(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = expense.description.ifEmpty { expense.categoryName },
+                text = expense.name.ifEmpty { expense.categoryName },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface

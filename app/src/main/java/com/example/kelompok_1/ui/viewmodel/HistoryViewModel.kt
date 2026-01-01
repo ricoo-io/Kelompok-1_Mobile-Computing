@@ -40,6 +40,7 @@ class HistoryViewModel(
     ) { expenses, filter ->
         expenses.filter { expense ->
             val matchesSearch = filter.searchQuery.isEmpty() ||
+                expense.name.contains(filter.searchQuery, ignoreCase = true) ||
                 expense.description.contains(filter.searchQuery, ignoreCase = true) ||
                 expense.categoryName.contains(filter.searchQuery, ignoreCase = true)
             

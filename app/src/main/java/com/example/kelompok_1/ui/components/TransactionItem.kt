@@ -62,7 +62,7 @@ fun TransactionItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = expense.description,
+                    text = expense.name,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,

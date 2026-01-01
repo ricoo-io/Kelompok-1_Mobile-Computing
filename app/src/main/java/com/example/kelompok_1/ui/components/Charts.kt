@@ -80,8 +80,7 @@ fun SpendingTrendChart(
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // Day labels
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -123,8 +122,7 @@ private fun LineChart(
             val y = padding + chartHeight - (daily.totalAmount / maxAmount * chartHeight).toFloat()
             Offset(x, y)
         }
-        
-        // Draw gradient area under the line
+
         if (points.size > 1) {
             val path = Path().apply {
                 moveTo(points.first().x, height - padding)
@@ -137,8 +135,7 @@ private fun LineChart(
                 path = path,
                 color = lineColor.copy(alpha = 0.1f)
             )
-            
-            // Draw the line
+
             val linePath = Path().apply {
                 moveTo(points.first().x, points.first().y)
                 points.drop(1).forEach { point ->
@@ -151,8 +148,7 @@ private fun LineChart(
                 color = lineColor,
                 style = Stroke(width = 3f)
             )
-            
-            // Draw points
+
             points.forEach { point ->
                 drawCircle(
                     color = lineColor,
@@ -212,8 +208,7 @@ fun CategoryPieChart(
             
             startAngle += sweepAngle
         }
-        
-        // Draw center circle (donut effect)
+
         drawCircle(
             color = surfaceColor,
             radius = radius * 0.5f,

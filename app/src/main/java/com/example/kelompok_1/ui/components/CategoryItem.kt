@@ -39,7 +39,6 @@ fun CategoryItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Category Icon
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -56,8 +55,7 @@ fun CategoryItem(
             }
             
             Spacer(modifier = Modifier.width(12.dp))
-            
-            // Category Name & Budget
+
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -90,8 +88,7 @@ fun CategoryItem(
                     }
                 }
             }
-            
-            // Edit button
+
             if (onEdit != null) {
                 IconButton(onClick = onEdit) {
                     Icon(

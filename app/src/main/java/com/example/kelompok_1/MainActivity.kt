@@ -17,9 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,6 +27,7 @@ import com.example.kelompok_1.ui.activity.*
 import com.example.kelompok_1.ui.components.*
 import com.example.kelompok_1.ui.theme.*
 import com.example.kelompok_1.ui.viewmodel.DashboardViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,25 +37,47 @@ class MainActivity : ComponentActivity() {
         val repository = (application as ExpenseTrackerApplication).repository
         
         setContent {
-            ExpenseTrackerTheme {
+            val context = LocalContext.current
+            val isDarkMode by ThemePreferences.isDarkMode(context).collectAsState(initial = false)
+            val scope = rememberCoroutineScope()
+            
+            ExpenseTrackerTheme(darkTheme = isDarkMode) {
                 val viewModel: DashboardViewModel = viewModel(
                     factory = DashboardViewModel.Factory(repository)
                 )
-                MainScreen(viewModel = viewModel)
+                MainScreen(
+                    viewModel = viewModel,
+                    isDarkMode = isDarkMode,
+                    onToggleTheme = {
+                        scope.launch {
+                            ThemePreferences.setDarkMode(context, !isDarkMode)
+                        }
+                    }
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: DashboardViewModel) {
+fun MainScreen(
+    viewModel: DashboardViewModel,
+    isDarkMode: Boolean = false,
+    onToggleTheme: () -> Unit = {}
+) {
     val context = LocalContext.current
-    val selectedPeriod by viewModel.selectedPeriod.collectAsState()
     val todayTotal by viewModel.todayTotal.collectAsState()
     val weeklyTotal by viewModel.weeklyTotal.collectAsState()
     val monthlyTotal by viewModel.monthlyTotal.collectAsState()
+    val monthlyIncome by viewModel.monthlyIncome.collectAsState()
+    val monthlyExpense by viewModel.monthlyExpense.collectAsState()
     val recentTransactions by viewModel.recentTransactions.collectAsState()
-    val dailySpending by viewModel.dailySpending.collectAsState()
+
+    val selectedDate by viewModel.selectedDate.collectAsState()
+    val expensesForSelectedDate by viewModel.expensesForSelectedDate.collectAsState()
+    val totalForSelectedDate by viewModel.totalForSelectedDate.collectAsState()
+    val isToday by viewModel.isToday.collectAsState()
     
     Scaffold(
         bottomBar = {
@@ -72,6 +93,29 @@ fun MainScreen(viewModel: DashboardViewModel) {
                     }
                     intent?.let { context.startActivity(it) }
                 }
+            )
+        },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "PanDana",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                actions = {
+                    IconButton(onClick = onToggleTheme) {
+                        Icon(
+                            imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = if (isDarkMode) "Light Mode" else "Dark Mode"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -94,94 +138,30 @@ fun MainScreen(viewModel: DashboardViewModel) {
                                 )
                             )
                         )
-                        .padding(top = 48.dp, bottom = 24.dp)
+                        .padding(vertical = 24.dp)
                         .padding(horizontal = 20.dp)
                 ) {
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Welcome back 👋",
-                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                                    fontSize = 14.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "User",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Profile",
-                                    tint = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        BalanceCard(
-                            totalBalance = monthlyTotal,
-                            income = 0.0,
-                            expense = monthlyTotal
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        PeriodSelector(
-                            selectedPeriod = selectedPeriod,
-                            onPeriodSelected = { viewModel.selectPeriod(it) }
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    SummaryCard(
-                        title = "Hari Ini",
-                        amount = todayTotal,
-                        icon = Icons.Default.Today,
-                        backgroundColor = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.weight(1f)
-                    )
-                    SummaryCard(
-                        title = "Minggu Ini",
-                        amount = weeklyTotal,
-                        icon = Icons.Default.DateRange,
-                        backgroundColor = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.weight(1f)
+                    BalanceCard(
+                        totalBalance = monthlyIncome - monthlyExpense,
+                        income = monthlyIncome,
+                        expense = monthlyExpense
                     )
                 }
             }
 
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                SpendingTrendChart(
-                    dailySpending = dailySpending,
+                DailyExpensesPager(
+                    selectedDate = selectedDate,
+                    expenses = expensesForSelectedDate,
+                    totalForDay = totalForSelectedDate,
+                    isToday = isToday,
+                    onPreviousDay = { viewModel.navigateToPreviousDay() },
+                    onNextDay = { viewModel.navigateToNextDay() },
                     modifier = Modifier.padding(horizontal = 20.dp)
                 )
             }
+
             item {
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
@@ -192,7 +172,7 @@ fun MainScreen(viewModel: DashboardViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Recent Transactions",
+                        text = "Transaksi Terbaru",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onBackground
@@ -201,7 +181,7 @@ fun MainScreen(viewModel: DashboardViewModel) {
                         context.startActivity(Intent(context, HistoryActivity::class.java))
                     }) {
                         Text(
-                            text = "View All",
+                            text = "Lihat Semua",
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -234,12 +214,21 @@ fun MainScreen(viewModel: DashboardViewModel) {
                     }
                 }
             } else {
-                items(recentTransactions) { expense ->
+            items(recentTransactions) { expense ->
                     TransactionItem(
                         expense = expense,
+                        onClick = {
+                            val intent = Intent(context, AddExpenseActivity::class.java)
+                            intent.putExtra(AddExpenseActivity.EXTRA_EXPENSE_ID, expense.id)
+                            context.startActivity(intent)
+                        },
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
                     )
                 }
+            }
+            
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

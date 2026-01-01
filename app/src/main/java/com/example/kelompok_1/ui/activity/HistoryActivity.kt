@@ -17,8 +17,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kelompok_1.ExpenseTrackerApplication
 import com.example.kelompok_1.data.model.ExpenseWithCategory
@@ -34,7 +36,9 @@ class HistoryActivity : ComponentActivity() {
         val repository = (application as ExpenseTrackerApplication).repository
         
         setContent {
-            ExpenseTrackerTheme {
+            val isDarkMode by ThemePreferences.isDarkMode(this).collectAsState(initial = false)
+            
+            ExpenseTrackerTheme(darkTheme = isDarkMode) {
                 val viewModel: HistoryViewModel = viewModel(
                     factory = HistoryViewModel.Factory(repository)
                 )
@@ -51,8 +55,7 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
     val categories by viewModel.categories.collectAsState()
     val groupedExpenses by viewModel.groupedExpenses.collectAsState()
     val filteredTotal by viewModel.filteredTotal.collectAsState()
-    
-    var showDeleteDialog by remember { mutableStateOf<ExpenseWithCategory?>(null) }
+    val context = LocalContext.current
     
     Scaffold(
         topBar = {
@@ -140,7 +143,7 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
 
                 FilterChip(
                     selected = filterState.startDate != null,
-                    onClick = { 
+                    onClick = {
                         if (filterState.startDate != null) {
                             viewModel.setDateRange(null, null)
                         } else {
@@ -172,7 +175,7 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
 
             if (groupedExpenses.isEmpty()) {
@@ -210,28 +213,38 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
                 ) {
                     groupedExpenses.forEach { (dateGroup, expenses) ->
+                        val dayIncome = expenses.filter { it.isIncome }.sumOf { it.amount }
+                        val dayExpense = expenses.filter { !it.isIncome }.sumOf { it.amount }
+                        val dayNet = dayIncome - dayExpense
+
                         item {
                             TransactionDateHeader(
                                 date = dateGroup,
-                                totalAmount = expenses.sumOf { it.amount }
+                                totalAmount = dayNet,
+                                isPositive = dayNet >= 0
                             )
                         }
-                        
+
                         items(expenses, key = { it.id }) { expense ->
                             TransactionItem(
                                 expense = expense,
-                                onClick = { /* View details */ },
-                                onDelete = { showDeleteDialog = expense },
+                                onClick = {
+                                    val intent = android.content.Intent(
+                                        context,
+                                        AddExpenseActivity::class.java
+                                    )
+                                    intent.putExtra(AddExpenseActivity.EXTRA_EXPENSE_ID, expense.id)
+                                    context.startActivity(intent)
+                                },
                                 modifier = Modifier.padding(vertical = 4.dp)
                             )
                         }
-                        
+
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
-                    
-                    // Summary at bottom
+
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                         Card(
@@ -241,57 +254,56 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                                 containerColor = MaterialTheme.colorScheme.surface
                             )
                         ) {
-                            Row(
+                            val allExpenses = groupedExpenses.values.flatten()
+                            val totalIncome = allExpenses.filter { it.isIncome }.sumOf { it.amount }
+                            val totalExpenseAmount =
+                                allExpenses.filter { !it.isIncome }.sumOf { it.amount }
+
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(16.dp)
                             ) {
-                                Text(
-                                    text = "Total Pengeluaran",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "-${formatCurrency(filteredTotal)}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.error
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Total Pemasukan",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "+${formatCurrency(totalIncome)}",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF4CAF50)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Total Pengeluaran",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "-${formatCurrency(totalExpenseAmount)}",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
-
-    showDeleteDialog?.let { expense ->
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = null },
-            title = { Text("Hapus Transaksi") },
-            text = { 
-                Text("Apakah Anda yakin ingin menghapus transaksi \"${expense.description}\"?")
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteExpense(expense.id)
-                        showDeleteDialog = null
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text("Hapus")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = null }) {
-                    Text("Batal")
-                }
-            }
-        )
     }
 }

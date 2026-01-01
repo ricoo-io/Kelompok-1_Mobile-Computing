@@ -35,7 +35,9 @@ class ReportsActivity : ComponentActivity() {
         val repository = (application as ExpenseTrackerApplication).repository
         
         setContent {
-            ExpenseTrackerTheme {
+            val isDarkMode by ThemePreferences.isDarkMode(this).collectAsState(initial = false)
+            
+            ExpenseTrackerTheme(darkTheme = isDarkMode) {
                 val viewModel: ReportsViewModel = viewModel(
                     factory = ReportsViewModel.Factory(repository)
                 )
@@ -52,6 +54,8 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
     val selectedMonth by viewModel.selectedMonth.collectAsState()
     val selectedYear by viewModel.selectedYear.collectAsState()
     val totalSpending by viewModel.totalSpending.collectAsState()
+    val totalIncome by viewModel.totalIncome.collectAsState()
+    val totalExpense by viewModel.totalExpense.collectAsState()
     val categorySpending by viewModel.categorySpending.collectAsState()
     val categoryPercentages by viewModel.categoryPercentages.collectAsState()
     val dailySpending by viewModel.dailySpending.collectAsState()
@@ -158,30 +162,97 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
             }
 
             item {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF4CAF50).copy(alpha = 0.15f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Pemasukan",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = formatCurrency(totalIncome),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4CAF50)
+                            )
+                        }
+                    }
+                    
+
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Pengeluaran",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = formatCurrency(totalExpense),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+            
+
+            item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                     )
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = formatCurrency(totalSpending),
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            text = "Saldo Periode Ini",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Total Pengeluaran",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = formatCurrency(totalIncome - totalExpense),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (totalIncome - totalExpense >= 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -265,13 +336,13 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Pie Chart
+
                                 CategoryPieChart(
                                     categorySpending = categorySpending,
                                     modifier = Modifier.size(150.dp)
                                 )
                                 
-                                // Legend
+
                                 Column(
                                     modifier = Modifier.padding(start = 16.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)

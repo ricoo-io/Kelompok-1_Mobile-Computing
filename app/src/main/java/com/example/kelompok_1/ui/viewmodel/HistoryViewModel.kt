@@ -28,12 +28,12 @@ class HistoryViewModel(
         .getAllCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
-    // All expenses (unfiltered base)
+
     private val allExpenses: StateFlow<List<ExpenseWithCategory>> = repository
         .getAllExpenses()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
-    // Filtered expenses based on filter state
+
     val filteredExpenses: StateFlow<List<ExpenseWithCategory>> = combine(
         allExpenses,
         _filterState
@@ -53,7 +53,7 @@ class HistoryViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
-    // Group expenses by date for display
+
     val groupedExpenses: StateFlow<Map<String, List<ExpenseWithCategory>>> = filteredExpenses
         .map { expenses ->
             expenses.groupBy { expense ->
@@ -62,7 +62,7 @@ class HistoryViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
     
-    // Total for filtered expenses
+
     val filteredTotal: StateFlow<Double> = filteredExpenses
         .map { expenses -> expenses.sumOf { it.amount } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)

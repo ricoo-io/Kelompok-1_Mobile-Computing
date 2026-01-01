@@ -24,5 +24,6 @@ data class Expense(
     val description: String,
     val categoryId: Long,
     val date: Long, // timestamp in milliseconds
+    val isIncome: Boolean = false, // true = income, false = expense
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -52,7 +52,7 @@ interface ExpenseDao {
         SELECT c.id as categoryId, c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor,
                COALESCE(SUM(e.amount), 0) as totalAmount
         FROM categories c
-        LEFT JOIN expenses e ON c.id = e.categoryId AND e.date BETWEEN :startDate AND :endDate
+        LEFT JOIN expenses e ON c.id = e.categoryId AND e.date BETWEEN :startDate AND :endDate AND e.isIncome = 0
         GROUP BY c.id
         HAVING totalAmount > 0
         ORDER BY totalAmount DESC
@@ -62,11 +62,22 @@ interface ExpenseDao {
     @Query("""
         SELECT date / 86400000 * 86400000 as date, SUM(amount) as totalAmount
         FROM expenses
-        WHERE date BETWEEN :startDate AND :endDate
+        WHERE date BETWEEN :startDate AND :endDate AND isIncome = 0
         GROUP BY date / 86400000
         ORDER BY date ASC
     """)
     fun getDailySpending(startDate: Long, endDate: Long): Flow<List<DailySpending>>
+    
+    // Get total income for date range
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE date BETWEEN :startDate AND :endDate AND isIncome = 1")
+    fun getTotalIncome(startDate: Long, endDate: Long): Flow<Double>
+    
+    // Get total expenses for date range
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE date BETWEEN :startDate AND :endDate AND isIncome = 0")
+    fun getTotalExpenses(startDate: Long, endDate: Long): Flow<Double>
+    
+    @Query("SELECT * FROM expenses WHERE id = :id")
+    suspend fun getById(id: Long): Expense?
     
     @Insert
     suspend fun insert(expense: Expense): Long

@@ -2,31 +2,30 @@ package com.example.kelompok_1.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary Blue Colors (from reference UI)
+
 val PrimaryBlue = Color(0xFF2563EB)
 val PrimaryBlueDark = Color(0xFF1D4ED8)
 val PrimaryBlueLight = Color(0xFF3B82F6)
 val GradientStart = Color(0xFF2563EB)
 val GradientEnd = Color(0xFF1E40AF)
 
-// Secondary Colors
+
 val SecondaryGreen = Color(0xFF10B981)
 val SecondaryRed = Color(0xFFEF4444)
 val SecondaryOrange = Color(0xFFF97316)
 
-// Background Colors
 val BackgroundLight = Color(0xFFF8FAFC)
 val BackgroundDark = Color(0xFF0F172A)
 val SurfaceLight = Color(0xFFFFFFFF)
 val SurfaceDark = Color(0xFF1E293B)
 
-// Text Colors
+
 val TextPrimary = Color(0xFF1E293B)
 val TextSecondary = Color(0xFF64748B)
 val TextOnPrimary = Color(0xFFFFFFFF)
 val TextOnSurface = Color(0xFF1E293B)
 
-// Category Colors
+
 val CategoryFood = Color(0xFFFF9800)
 val CategoryTransport = Color(0xFF2196F3)
 val CategoryShopping = Color(0xFFE91E63)
@@ -36,7 +35,7 @@ val CategoryHealth = Color(0xFFF44336)
 val CategoryEducation = Color(0xFF009688)
 val CategoryOther = Color(0xFF607D8B)
 
-// Income/Expense Colors
+
 val IncomeColor = Color(0xFF10B981)
 val ExpenseColor = Color(0xFFEF4444)
 

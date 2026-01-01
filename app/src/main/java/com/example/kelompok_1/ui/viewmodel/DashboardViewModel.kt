@@ -17,47 +17,110 @@ class DashboardViewModel(
     private val _selectedPeriod = MutableStateFlow("Weekly")
     val selectedPeriod: StateFlow<String> = _selectedPeriod.asStateFlow()
     
-    // Today's date range
+
     private val todayStart = ExpenseRepository.getStartOfDay()
     private val todayEnd = ExpenseRepository.getEndOfDay()
     
-    // Week date range
+
     private val weekStart = ExpenseRepository.getStartOfWeek()
     private val weekEnd = ExpenseRepository.getEndOfDay()
     
-    // Month date range
+
     private val monthStart = ExpenseRepository.getStartOfMonth()
     private val monthEnd = ExpenseRepository.getEndOfDay()
     
-    // Daily total
+
     val todayTotal: StateFlow<Double> = repository
         .getTotalByDateRange(todayStart, todayEnd)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
     
-    // Weekly total
+
     val weeklyTotal: StateFlow<Double> = repository
         .getTotalByDateRange(weekStart, weekEnd)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
     
-    // Monthly total
+
     val monthlyTotal: StateFlow<Double> = repository
         .getTotalByDateRange(monthStart, monthEnd)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
     
-    // Recent transactions (last 5)
+
     val recentTransactions: StateFlow<List<ExpenseWithCategory>> = repository
         .getRecentExpenses(5)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
-    // Daily spending for chart (last 7 days)
+
     val dailySpending: StateFlow<List<DailySpending>> = repository
         .getDailySpending(ExpenseRepository.getDaysAgo(7), todayEnd)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
-    // Spending by category this month
+
     val categorySpending: StateFlow<List<CategorySpending>> = repository
         .getSpendingByCategory(monthStart, monthEnd)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    
+
+    val monthlyIncome: StateFlow<Double> = repository
+        .getTotalIncome(monthStart, monthEnd)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    
+    val monthlyExpense: StateFlow<Double> = repository
+        .getTotalExpenses(monthStart, monthEnd)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    
+
+    private val _selectedDate = MutableStateFlow(System.currentTimeMillis())
+    val selectedDate: StateFlow<Long> = _selectedDate.asStateFlow()
+    
+
+    val expensesForSelectedDate: StateFlow<List<ExpenseWithCategory>> = _selectedDate
+        .flatMapLatest { date ->
+            val startOfDay = ExpenseRepository.getStartOfDay(date)
+            val endOfDay = ExpenseRepository.getEndOfDay(date)
+            repository.getExpensesByDateRange(startOfDay, endOfDay)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    
+
+    val totalForSelectedDate: StateFlow<Double> = _selectedDate
+        .flatMapLatest { date ->
+            val startOfDay = ExpenseRepository.getStartOfDay(date)
+            val endOfDay = ExpenseRepository.getEndOfDay(date)
+            repository.getTotalByDateRange(startOfDay, endOfDay)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    
+    fun navigateToPreviousDay() {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.timeInMillis = _selectedDate.value
+        calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
+        _selectedDate.value = calendar.timeInMillis
+    }
+    
+    fun navigateToNextDay() {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.timeInMillis = _selectedDate.value
+        calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        // Don't allow navigating to future dates
+        if (calendar.timeInMillis <= System.currentTimeMillis()) {
+            _selectedDate.value = calendar.timeInMillis
+        }
+    }
+    
+    fun setSelectedDate(date: Long) {
+        if (date <= System.currentTimeMillis()) {
+            _selectedDate.value = date
+        }
+    }
+    
+
+    val isToday: StateFlow<Boolean> = _selectedDate
+        .map { date ->
+            val todayStart = ExpenseRepository.getStartOfDay()
+            val selectedStart = ExpenseRepository.getStartOfDay(date)
+            todayStart == selectedStart
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     
     fun selectPeriod(period: String) {
         _selectedPeriod.value = period

@@ -44,7 +44,7 @@ class CategoryViewModel(
         .getTotalBudget(currentMonth, currentYear)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
     
-    // Combined data: categories with their budgets and spending
+
     val categoriesWithBudget: StateFlow<List<CategoryWithBudget>> = combine(
         categories,
         budgets,

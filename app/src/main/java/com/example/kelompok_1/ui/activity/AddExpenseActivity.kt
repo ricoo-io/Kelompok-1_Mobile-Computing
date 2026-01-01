@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -30,20 +32,29 @@ import java.text.NumberFormat
 import java.util.*
 
 class AddExpenseActivity : ComponentActivity() {
+    companion object {
+        const val EXTRA_EXPENSE_ID = "expense_id"
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
         val repository = (application as ExpenseTrackerApplication).repository
+        val expenseId = intent.getLongExtra(EXTRA_EXPENSE_ID, -1L).takeIf { it != -1L }
         
         setContent {
-            ExpenseTrackerTheme {
+            val isDarkMode by ThemePreferences.isDarkMode(this).collectAsState(initial = false)
+            
+            ExpenseTrackerTheme(darkTheme = isDarkMode) {
                 val viewModel: ExpenseViewModel = viewModel(
                     factory = ExpenseViewModel.Factory(repository)
                 )
                 AddExpenseScreen(
                     viewModel = viewModel,
+                    expenseId = expenseId,
                     onSaved = { finish() },
+                    onDeleted = { finish() },
                     onBack = { finish() }
                 )
             }
@@ -55,17 +66,33 @@ class AddExpenseActivity : ComponentActivity() {
 @Composable
 fun AddExpenseScreen(
     viewModel: ExpenseViewModel,
+    expenseId: Long? = null,
     onSaved: () -> Unit,
+    onDeleted: () -> Unit = {},
     onBack: () -> Unit
 ) {
     val formState by viewModel.formState.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val context = LocalContext.current
+    val isEditMode = expenseId != null
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(expenseId) {
+        expenseId?.let { viewModel.loadExpense(it) }
+    }
 
     LaunchedEffect(formState.isSaved) {
         if (formState.isSaved) {
-            Toast.makeText(context, "Transaksi berhasil disimpan", Toast.LENGTH_SHORT).show()
+            val message = if (isEditMode) "Transaksi berhasil diupdate" else "Transaksi berhasil disimpan"
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             onSaved()
+        }
+    }
+    
+    LaunchedEffect(formState.isDeleted) {
+        if (formState.isDeleted) {
+            Toast.makeText(context, "Transaksi berhasil dihapus", Toast.LENGTH_SHORT).show()
+            onDeleted()
         }
     }
 
@@ -79,8 +106,14 @@ fun AddExpenseScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    val title = when {
+                        isEditMode && formState.isIncome -> "Edit Pemasukan"
+                        isEditMode && !formState.isIncome -> "Edit Pengeluaran"
+                        formState.isIncome -> "Tambah Pemasukan"
+                        else -> "Tambah Pengeluaran"
+                    }
                     Text(
-                        text = "Tambah Pengeluaran",
+                        text = title,
                         fontWeight = FontWeight.SemiBold
                     )
                 },
@@ -90,6 +123,17 @@ fun AddExpenseScreen(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
                         )
+                    }
+                },
+                actions = {
+                    if (isEditMode) {
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Hapus",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -107,6 +151,48 @@ fun AddExpenseScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(12.dp)
+                    )
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                listOf(false to "Pengeluaran", true to "Pemasukan").forEach { (isIncome, label) ->
+                    val isSelected = formState.isIncome == isIncome
+                    TextButton(
+                        onClick = { viewModel.setTransactionType(isIncome) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(
+                                if (isSelected) {
+                                    if (isIncome) SecondaryGreen else MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                },
+                                RoundedCornerShape(8.dp)
+                            ),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (isIncome) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = label,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+            
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -116,7 +202,7 @@ fun AddExpenseScreen(
                     modifier = Modifier.padding(20.dp)
                 ) {
                     Text(
-                        text = "Jumlah Pengeluaran",
+                        text = if (formState.isIncome) "Jumlah Pemasukan" else "Jumlah Pengeluaran",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -258,12 +344,40 @@ fun AddExpenseScreen(
                     )
                 } else {
                     Text(
-                        text = "Simpan Transaksi",
+                        text = if (isEditMode) "Simpan Perubahan" else "Simpan Transaksi",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Hapus Transaksi") },
+            text = { 
+                Text("Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteExpense()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Hapus")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 }

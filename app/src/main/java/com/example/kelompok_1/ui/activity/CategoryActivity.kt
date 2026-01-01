@@ -38,7 +38,9 @@ class CategoryActivity : ComponentActivity() {
         val repository = (application as ExpenseTrackerApplication).repository
         
         setContent {
-            ExpenseTrackerTheme {
+            val isDarkMode by ThemePreferences.isDarkMode(this).collectAsState(initial = false)
+            
+            ExpenseTrackerTheme(darkTheme = isDarkMode) {
                 val viewModel: CategoryViewModel = viewModel(
                     factory = CategoryViewModel.Factory(repository)
                 )

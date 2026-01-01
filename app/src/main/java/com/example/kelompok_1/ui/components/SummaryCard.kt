@@ -50,7 +50,6 @@ fun BalanceCard(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Total Balance Section
                 Column {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
@@ -76,8 +75,6 @@ fun BalanceCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                
-                // Income & Expense Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -233,7 +230,7 @@ fun PeriodSelector(
     }
 }
 
-// Utility function to format currency
+
 fun formatCurrency(amount: Double, compact: Boolean = false): String {
     val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
     format.maximumFractionDigits = 0

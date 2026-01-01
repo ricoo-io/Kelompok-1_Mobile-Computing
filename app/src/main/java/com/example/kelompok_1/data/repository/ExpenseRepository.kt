@@ -34,6 +34,12 @@ class ExpenseRepository(
     fun getDailySpending(startDate: Long, endDate: Long): Flow<List<DailySpending>> =
         expenseDao.getDailySpending(startDate, endDate)
     
+    fun getTotalIncome(startDate: Long, endDate: Long): Flow<Double> =
+        expenseDao.getTotalIncome(startDate, endDate)
+    
+    fun getTotalExpenses(startDate: Long, endDate: Long): Flow<Double> =
+        expenseDao.getTotalExpenses(startDate, endDate)
+    
     suspend fun insertExpense(expense: Expense): Long = expenseDao.insert(expense)
     
     suspend fun updateExpense(expense: Expense) = expenseDao.update(expense)
@@ -42,9 +48,13 @@ class ExpenseRepository(
     
     suspend fun deleteExpenseById(id: Long) = expenseDao.deleteById(id)
     
+    suspend fun getExpenseById(id: Long): Expense? = expenseDao.getById(id)
+    
     // ===== Category Operations =====
     
     fun getAllCategories(): Flow<List<Category>> = categoryDao.getAllCategories()
+    
+    fun getCategoriesByType(type: String): Flow<List<Category>> = categoryDao.getCategoriesByType(type)
     
     suspend fun getCategoryById(id: Long): Category? = categoryDao.getCategoryById(id)
     

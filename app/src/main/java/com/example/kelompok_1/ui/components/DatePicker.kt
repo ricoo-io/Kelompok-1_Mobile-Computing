@@ -77,8 +77,7 @@ fun ExpenseDatePicker(
                     }
                 }
             }
-            
-            // Month dropdown
+
             var monthExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 expanded = monthExpanded,
@@ -112,8 +111,7 @@ fun ExpenseDatePicker(
                     }
                 }
             }
-            
-            // Year dropdown
+
             var yearExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 expanded = yearExpanded,

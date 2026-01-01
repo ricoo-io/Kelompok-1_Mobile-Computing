@@ -28,7 +28,7 @@ class ReportsViewModel(
     private val _selectedYear = MutableStateFlow(Calendar.getInstance().get(Calendar.YEAR))
     val selectedYear: StateFlow<Int> = _selectedYear.asStateFlow()
     
-    // Date range based on selected period
+
     private val dateRange: StateFlow<Pair<Long, Long>> = combine(
         _selectedPeriod,
         _selectedMonth,
@@ -41,31 +41,45 @@ class ReportsViewModel(
         calculateDateRange(ReportPeriod.MONTH, Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.YEAR))
     )
     
-    // Total spending for selected period
+
     val totalSpending: StateFlow<Double> = dateRange
         .flatMapLatest { (start, end) ->
             repository.getTotalByDateRange(start, end)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
     
-    // Spending by category for selected period
+
+    val totalIncome: StateFlow<Double> = dateRange
+        .flatMapLatest { (start, end) ->
+            repository.getTotalIncome(start, end)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    
+
+    val totalExpense: StateFlow<Double> = dateRange
+        .flatMapLatest { (start, end) ->
+            repository.getTotalExpenses(start, end)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    
+
     val categorySpending: StateFlow<List<CategorySpending>> = dateRange
         .flatMapLatest { (start, end) ->
             repository.getSpendingByCategory(start, end)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
-    // Daily spending trend for selected period
+
     val dailySpending: StateFlow<List<DailySpending>> = dateRange
         .flatMapLatest { (start, end) ->
             repository.getDailySpending(start, end)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
-    // Spending percentages by category
+
     val categoryPercentages: StateFlow<List<Pair<CategorySpending, Double>>> = combine(
         categorySpending,
-        totalSpending
+        totalExpense
     ) { spending, total ->
         if (total > 0) {
             spending.map { it to (it.totalAmount / total * 100) }
@@ -89,7 +103,7 @@ class ReportsViewModel(
     fun previousPeriod() {
         when (_selectedPeriod.value) {
             ReportPeriod.WEEK -> {
-                // Go back one week
+
                 val calendar = Calendar.getInstance().apply {
                     set(Calendar.YEAR, _selectedYear.value)
                     set(Calendar.MONTH, _selectedMonth.value)

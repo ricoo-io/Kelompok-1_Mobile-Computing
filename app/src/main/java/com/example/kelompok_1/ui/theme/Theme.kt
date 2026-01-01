@@ -76,7 +76,6 @@ fun ExpenseTrackerTheme(
     )
 }
 
-// Keep legacy theme name for compatibility
 @Composable
 fun Kelompok_1Theme(
     darkTheme: Boolean = isSystemInDarkTheme(),

@@ -9,6 +9,7 @@ data class ExpenseWithCategory(
     val description: String,
     val categoryId: Long,
     val date: Long,
+    val isIncome: Boolean = false,
     val createdAt: Long,
     val categoryName: String,
     val categoryIcon: String,

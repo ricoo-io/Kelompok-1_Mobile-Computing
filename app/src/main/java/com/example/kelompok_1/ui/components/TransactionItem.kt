@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.kelompok_1.data.model.ExpenseWithCategory
+import com.example.kelompok_1.ui.theme.SecondaryGreen
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,7 +24,6 @@ import java.util.*
 fun TransactionItem(
     expense: ExpenseWithCategory,
     onClick: () -> Unit = {},
-    onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -39,7 +39,7 @@ fun TransactionItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Category Icon
+
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -57,7 +57,7 @@ fun TransactionItem(
             
             Spacer(modifier = Modifier.width(12.dp))
             
-            // Description & Category
+
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -89,30 +89,22 @@ fun TransactionItem(
                     )
                 }
             }
-            
-            // Amount
+
+            val amountColor = if (expense.isIncome) SecondaryGreen else MaterialTheme.colorScheme.error
+            val amountPrefix = if (expense.isIncome) "+" else "-"
             Text(
-                text = "-${formatCurrency(expense.amount)}",
+                text = "$amountPrefix${formatCurrency(expense.amount)}",
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.error
+                color = amountColor
             )
-            
-            // Delete button (optional)
-            if (onDelete != null) {
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -121,6 +113,7 @@ fun TransactionItem(
 fun TransactionDateHeader(
     date: String,
     totalAmount: Double? = null,
+    isPositive: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -137,19 +130,22 @@ fun TransactionDateHeader(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         if (totalAmount != null) {
+            val prefix = if (isPositive) "+" else ""
+            val displayColor = if (isPositive) SecondaryGreen else MaterialTheme.colorScheme.error
             Text(
-                text = "-${formatCurrency(totalAmount)}",
+                text = "$prefix${formatCurrency(kotlin.math.abs(totalAmount))}",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.error
+                color = displayColor
             )
         }
     }
 }
 
-// Helper function to get icon by name
+
 fun getCategoryIcon(iconName: String): ImageVector {
     return when (iconName) {
+
         "Restaurant" -> Icons.Default.Restaurant
         "DirectionsCar" -> Icons.Default.DirectionsCar
         "ShoppingCart" -> Icons.Default.ShoppingCart
@@ -158,17 +154,24 @@ fun getCategoryIcon(iconName: String): ImageVector {
         "LocalHospital" -> Icons.Default.LocalHospital
         "School" -> Icons.Default.School
         "MoreHoriz" -> Icons.Default.MoreHoriz
+
+        "AccountBalance" -> Icons.Default.AccountBalance
+        "CardGiftcard" -> Icons.Default.CardGiftcard
+        "TrendingUp" -> Icons.Default.TrendingUp
+        "Redeem" -> Icons.Default.Redeem
+        "AttachMoney" -> Icons.Default.AttachMoney
+
         else -> Icons.Default.Category
     }
 }
 
-// Helper function to format time
+
 fun formatTime(timestamp: Long): String {
     val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
     return sdf.format(Date(timestamp))
 }
 
-// Helper function to format date
+
 fun formatDate(timestamp: Long): String {
     val today = Calendar.getInstance()
     val date = Calendar.getInstance().apply { timeInMillis = timestamp }

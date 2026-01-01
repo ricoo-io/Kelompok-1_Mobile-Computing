@@ -39,6 +39,7 @@ class AddExpenseActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        overridePendingTransition(0, 0)
         
         val repository = (application as ExpenseTrackerApplication).repository
         val expenseId = intent.getLongExtra(EXTRA_EXPENSE_ID, -1L).takeIf { it != -1L }

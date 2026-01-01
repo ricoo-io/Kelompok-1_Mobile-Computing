@@ -34,6 +34,7 @@ class CategoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        overridePendingTransition(0, 0)
         
         val repository = (application as ExpenseTrackerApplication).repository
         

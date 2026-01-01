@@ -1,5 +1,6 @@
 package com.example.kelompok_1.ui.components
 
+import android.app.Activity
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -74,6 +75,7 @@ fun BottomNavBar(
                                 .clickable {
                                     if (currentRoute != "add") {
                                         context.startActivity(Intent(context, AddExpenseActivity::class.java))
+                                        (context as? Activity)?.overridePendingTransition(0, 0)
                                     }
                                 },
                             contentAlignment = Alignment.Center
@@ -102,6 +104,8 @@ fun BottomNavBar(
                                     intent?.let {
                                         it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                                         context.startActivity(it)
+                                        // Hilangkan animasi transisi agar bottom bar tidak terlihat bergeser
+                                        (context as? Activity)?.overridePendingTransition(0, 0)
                                     }
                                 }
                             }

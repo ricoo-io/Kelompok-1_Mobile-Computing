@@ -24,7 +24,7 @@ data class Expense(
     val name: String, // Nama transaksi (wajib)
     val description: String = "", // Catatan (opsional)
     val categoryId: Long,
-    val date: Long, // timestamp in milliseconds
-    val isIncome: Boolean = false, // true = income, false = expense
+    val date: Long,
+    val isIncome: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 )

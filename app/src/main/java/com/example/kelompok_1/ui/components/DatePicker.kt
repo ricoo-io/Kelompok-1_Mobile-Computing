@@ -1,10 +1,16 @@
 package com.example.kelompok_1.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -14,18 +20,15 @@ fun ExpenseDatePicker(
     onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val calendar = remember(selectedDate) {
-        Calendar.getInstance().apply { timeInMillis = selectedDate }
+    var showDatePicker by remember { mutableStateOf(false) }
+    
+    val dateFormatter = remember {
+        SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("id", "ID"))
     }
     
-    val day = calendar.get(Calendar.DAY_OF_MONTH)
-    val month = calendar.get(Calendar.MONTH)
-    val year = calendar.get(Calendar.YEAR)
-    
-    val months = listOf(
-        "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
-        "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
-    )
+    val formattedDate = remember(selectedDate) {
+        dateFormatter.format(Date(selectedDate))
+    }
     
     Column(modifier = modifier) {
         Text(
@@ -36,134 +39,75 @@ fun ExpenseDatePicker(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        Row(
+        OutlinedCard(
+            onClick = { showDatePicker = true },
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            shape = RoundedCornerShape(12.dp)
         ) {
-            // Day dropdown
-            var dayExpanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = dayExpanded,
-                onExpandedChange = { dayExpanded = it },
-                modifier = Modifier.weight(0.8f)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedTextField(
-                    value = day.toString(),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Tgl") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
-                    modifier = Modifier
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-                        .fillMaxWidth(),
-                    singleLine = true,
-                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                Text(
+                    text = formattedDate,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                ExposedDropdownMenu(
-                    expanded = dayExpanded,
-                    onDismissRequest = { dayExpanded = false }
-                ) {
-                    val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-                    (1..daysInMonth).forEach { d ->
-                        DropdownMenuItem(
-                            text = { Text(d.toString()) },
-                            onClick = {
-                                val newCalendar = Calendar.getInstance().apply {
-                                    set(year, month, d)
-                                }
-                                onDateSelected(newCalendar.timeInMillis)
-                                dayExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            // Month dropdown
-            var monthExpanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = monthExpanded,
-                onExpandedChange = { monthExpanded = it },
-                modifier = Modifier.weight(1f)
-            ) {
-                OutlinedTextField(
-                    value = months[month],
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Bulan") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = monthExpanded) },
-                    modifier = Modifier
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-                        .fillMaxWidth(),
-                    singleLine = true,
-                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                Icon(
+                    imageVector = Icons.Default.CalendarToday,
+                    contentDescription = "Pilih Tanggal",
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                ExposedDropdownMenu(
-                    expanded = monthExpanded,
-                    onDismissRequest = { monthExpanded = false }
-                ) {
-                    months.forEachIndexed { index, monthName ->
-                        DropdownMenuItem(
-                            text = { Text(monthName) },
-                            onClick = {
-                                val tempCalendar = Calendar.getInstance().apply {
-                                    set(year, index, 1)
-                                }
-                                val maxDay = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-                                val newCalendar = Calendar.getInstance().apply {
-                                    set(year, index, day.coerceAtMost(maxDay))
-                                }
-                                onDateSelected(newCalendar.timeInMillis)
-                                monthExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            // Year dropdown
-            var yearExpanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = yearExpanded,
-                onExpandedChange = { yearExpanded = it },
-                modifier = Modifier.weight(1f)
-            ) {
-                OutlinedTextField(
-                    value = year.toString(),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Tahun") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = yearExpanded) },
-                    modifier = Modifier
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-                        .fillMaxWidth(),
-                    singleLine = true,
-                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                )
-                ExposedDropdownMenu(
-                    expanded = yearExpanded,
-                    onDismissRequest = { yearExpanded = false }
-                ) {
-                    val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-                    (currentYear - 5..currentYear + 1).forEach { y ->
-                        DropdownMenuItem(
-                            text = { Text(y.toString()) },
-                            onClick = {
-                                val tempCalendar = Calendar.getInstance().apply {
-                                    set(y, month, 1)
-                                }
-                                val maxDay = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-                                val newCalendar = Calendar.getInstance().apply {
-                                    set(y, month, day.coerceAtMost(maxDay))
-                                }
-                                onDateSelected(newCalendar.timeInMillis)
-                                yearExpanded = false
-                            }
-                        )
-                    }
-                }
             }
         }
     }
+    
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate
+        )
+        
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                        
+                            val calendar = Calendar.getInstance().apply {
+                                timeInMillis = millis
+                                set(Calendar.HOUR_OF_DAY, 12)
+                                set(Calendar.MINUTE, 0)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+                            onDateSelected(calendar.timeInMillis)
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("Pilih")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Batal")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false,
+                title = {
+                    Text(
+                        text = "Pilih Tanggal",
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp)
+                    )
+                }
+            )
+        }
+    }
 }
-

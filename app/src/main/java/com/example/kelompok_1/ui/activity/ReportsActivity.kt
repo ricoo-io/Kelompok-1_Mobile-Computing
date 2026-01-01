@@ -78,14 +78,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                         fontWeight = FontWeight.SemiBold
                     )
                 },
-                actions = {
-                    IconButton(onClick = { /* More options */ }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More"
-                        )
-                    }
-                },
+
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )

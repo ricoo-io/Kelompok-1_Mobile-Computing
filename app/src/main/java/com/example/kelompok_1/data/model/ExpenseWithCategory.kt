@@ -1,8 +1,6 @@
 package com.example.kelompok_1.data.model
 
-/**
- * Data class for expense with category information joined
- */
+
 data class ExpenseWithCategory(
     val id: Long,
     val amount: Double,
@@ -17,9 +15,6 @@ data class ExpenseWithCategory(
     val categoryColor: Long
 )
 
-/**
- * Data class for category spending summary
- */
 data class CategorySpending(
     val categoryId: Long,
     val categoryName: String,
@@ -28,9 +23,6 @@ data class CategorySpending(
     val totalAmount: Double
 )
 
-/**
- * Data class for daily spending trend
- */
 data class DailySpending(
     val date: Long,
     val totalAmount: Double

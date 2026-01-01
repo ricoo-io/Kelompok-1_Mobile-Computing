@@ -70,7 +70,7 @@ fun CategoryScreen(viewModel: CategoryViewModel) {
                     )
                 },
                 actions = {
-                    TextButton(onClick = { /* Edit mode */ }) {
+                    TextButton(onClick = {}) {
                         Text("Edit", color = MaterialTheme.colorScheme.primary)
                     }
                 },

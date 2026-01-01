@@ -8,15 +8,15 @@ data class Category(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
-    val icon: String, // Material icon name (e.g., "Restaurant", "DirectionsCar")
-    val color: Long, // Color as ARGB Long
-    val type: String = "expense" // "expense", "income", or "both"
+    val icon: String,
+    val color: Long,
+    val type: String = "expense"
 )
 
-// Predefined default categories
+
 object DefaultCategories {
     val list = listOf(
-        // Expense categories
+
         Category(id = 1, name = "Makanan & Minuman", icon = "Restaurant", color = 0xFFFF9800, type = "expense"),
         Category(id = 2, name = "Transportasi", icon = "DirectionsCar", color = 0xFF2196F3, type = "expense"),
         Category(id = 3, name = "Belanja", icon = "ShoppingCart", color = 0xFFE91E63, type = "expense"),
@@ -25,7 +25,7 @@ object DefaultCategories {
         Category(id = 6, name = "Kesehatan", icon = "LocalHospital", color = 0xFFF44336, type = "expense"),
         Category(id = 7, name = "Pendidikan", icon = "School", color = 0xFF009688, type = "expense"),
         Category(id = 8, name = "Lainnya", icon = "MoreHoriz", color = 0xFF607D8B, type = "expense"),
-        // Income categories
+
         Category(id = 9, name = "Gaji", icon = "AccountBalance", color = 0xFF4CAF50, type = "income"),
         Category(id = 10, name = "Bonus", icon = "CardGiftcard", color = 0xFF8BC34A, type = "income"),
         Category(id = 11, name = "Investasi", icon = "TrendingUp", color = 0xFF00BCD4, type = "income"),

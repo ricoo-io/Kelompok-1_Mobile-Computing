@@ -68,7 +68,7 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                     )
                 },
                 actions = {
-                    IconButton(onClick = { /* Filter options */ }) {
+                    IconButton(onClick = {  }) {
                         Icon(
                             imageVector = Icons.Default.FilterList,
                             contentDescription = "Filter"

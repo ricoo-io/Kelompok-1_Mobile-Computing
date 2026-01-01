@@ -12,8 +12,7 @@ class ExpenseRepository(
     private val categoryDao: CategoryDao,
     private val budgetDao: BudgetDao
 ) {
-    // ===== Expense Operations =====
-    
+
     fun getAllExpenses(): Flow<List<ExpenseWithCategory>> = expenseDao.getAllExpensesWithCategory()
     
     fun getExpensesByDateRange(startDate: Long, endDate: Long): Flow<List<ExpenseWithCategory>> =
@@ -49,8 +48,7 @@ class ExpenseRepository(
     suspend fun deleteExpenseById(id: Long) = expenseDao.deleteById(id)
     
     suspend fun getExpenseById(id: Long): Expense? = expenseDao.getById(id)
-    
-    // ===== Category Operations =====
+
     
     fun getAllCategories(): Flow<List<Category>> = categoryDao.getAllCategories()
     
@@ -65,8 +63,7 @@ class ExpenseRepository(
     suspend fun deleteCategory(category: Category) = categoryDao.delete(category)
     
     suspend fun deleteCategoryById(id: Long) = categoryDao.deleteById(id)
-    
-    // ===== Budget Operations =====
+
     
     fun getBudgetsByMonth(month: Int, year: Int): Flow<List<Budget>> =
         budgetDao.getBudgetsByMonth(month, year)
@@ -82,8 +79,7 @@ class ExpenseRepository(
     suspend fun updateBudget(budget: Budget) = budgetDao.update(budget)
     
     suspend fun deleteBudget(budget: Budget) = budgetDao.delete(budget)
-    
-    // ===== Date Helpers =====
+
     
     companion object {
         fun getStartOfDay(date: Long = System.currentTimeMillis()): Long {

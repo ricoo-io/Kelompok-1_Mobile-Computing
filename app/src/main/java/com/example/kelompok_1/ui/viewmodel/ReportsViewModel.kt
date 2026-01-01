@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.kelompok_1.data.model.CategorySpending
 import com.example.kelompok_1.data.model.DailySpending
+import com.example.kelompok_1.data.model.ExpenseWithCategory
 import com.example.kelompok_1.data.repository.ExpenseRepository
 import kotlinx.coroutines.flow.*
 import java.util.*
@@ -28,17 +29,20 @@ class ReportsViewModel(
     private val _selectedYear = MutableStateFlow(Calendar.getInstance().get(Calendar.YEAR))
     val selectedYear: StateFlow<Int> = _selectedYear.asStateFlow()
     
+    private val _selectedWeekOffset = MutableStateFlow(0)
+    val selectedWeekOffset: StateFlow<Int> = _selectedWeekOffset.asStateFlow()
 
     private val dateRange: StateFlow<Pair<Long, Long>> = combine(
         _selectedPeriod,
         _selectedMonth,
-        _selectedYear
-    ) { period, month, year ->
-        calculateDateRange(period, month, year)
+        _selectedYear,
+        _selectedWeekOffset
+    ) { period, month, year, weekOffset ->
+        calculateDateRange(period, month, year, weekOffset)
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        calculateDateRange(ReportPeriod.MONTH, Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.YEAR))
+        calculateDateRange(ReportPeriod.MONTH, Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.YEAR), 0)
     )
     
 
@@ -88,6 +92,12 @@ class ReportsViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
+    fun getExpensesForCategory(categoryId: Long): Flow<List<ExpenseWithCategory>> {
+        return dateRange.flatMapLatest { (start, end) ->
+            repository.getExpensesByCategory(categoryId, start, end)
+        }
+    }
+    
     fun selectPeriod(period: ReportPeriod) {
         _selectedPeriod.value = period
     }
@@ -103,14 +113,7 @@ class ReportsViewModel(
     fun previousPeriod() {
         when (_selectedPeriod.value) {
             ReportPeriod.WEEK -> {
-
-                val calendar = Calendar.getInstance().apply {
-                    set(Calendar.YEAR, _selectedYear.value)
-                    set(Calendar.MONTH, _selectedMonth.value)
-                    add(Calendar.WEEK_OF_YEAR, -1)
-                }
-                _selectedMonth.value = calendar.get(Calendar.MONTH)
-                _selectedYear.value = calendar.get(Calendar.YEAR)
+                _selectedWeekOffset.value = _selectedWeekOffset.value - 1
             }
             ReportPeriod.MONTH -> {
                 if (_selectedMonth.value == 0) {
@@ -129,13 +132,7 @@ class ReportsViewModel(
     fun nextPeriod() {
         when (_selectedPeriod.value) {
             ReportPeriod.WEEK -> {
-                val calendar = Calendar.getInstance().apply {
-                    set(Calendar.YEAR, _selectedYear.value)
-                    set(Calendar.MONTH, _selectedMonth.value)
-                    add(Calendar.WEEK_OF_YEAR, 1)
-                }
-                _selectedMonth.value = calendar.get(Calendar.MONTH)
-                _selectedYear.value = calendar.get(Calendar.YEAR)
+                _selectedWeekOffset.value = _selectedWeekOffset.value + 1
             }
             ReportPeriod.MONTH -> {
                 if (_selectedMonth.value == 11) {
@@ -151,7 +148,7 @@ class ReportsViewModel(
         }
     }
     
-    private fun calculateDateRange(period: ReportPeriod, month: Int, year: Int): Pair<Long, Long> {
+    private fun calculateDateRange(period: ReportPeriod, month: Int, year: Int, weekOffset: Int = 0): Pair<Long, Long> {
         val calendar = Calendar.getInstance()
         
         return when (period) {
@@ -162,6 +159,7 @@ class ReportsViewModel(
                     set(Calendar.MINUTE, 0)
                     set(Calendar.SECOND, 0)
                     set(Calendar.MILLISECOND, 0)
+                    add(Calendar.WEEK_OF_YEAR, weekOffset)
                 }
                 val start = calendar.timeInMillis
                 calendar.add(Calendar.DAY_OF_WEEK, 6)
@@ -215,6 +213,31 @@ class ReportsViewModel(
             "Juli", "Agustus", "September", "Oktober", "November", "Desember"
         )
         return months[month]
+    }
+    
+    fun getWeekDateRangeText(weekOffset: Int): String {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_WEEK, firstDayOfWeek)
+            add(Calendar.WEEK_OF_YEAR, weekOffset)
+        }
+        val startDay = calendar.get(Calendar.DAY_OF_MONTH)
+        val startMonth = calendar.get(Calendar.MONTH)
+        val startYear = calendar.get(Calendar.YEAR)
+        
+        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        val endDay = calendar.get(Calendar.DAY_OF_MONTH)
+        val endMonth = calendar.get(Calendar.MONTH)
+        val endYear = calendar.get(Calendar.YEAR)
+        
+        val months = listOf("Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des")
+        
+        return if (startMonth == endMonth && startYear == endYear) {
+            "$startDay - $endDay ${months[startMonth]} $startYear"
+        } else if (startYear == endYear) {
+            "$startDay ${months[startMonth]} - $endDay ${months[endMonth]} $startYear"
+        } else {
+            "$startDay ${months[startMonth]} $startYear - $endDay ${months[endMonth]} $endYear"
+        }
     }
     
     class Factory(private val repository: ExpenseRepository) : ViewModelProvider.Factory {

@@ -14,8 +14,6 @@ fun ExpenseDatePicker(
     onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showDatePicker by remember { mutableStateOf(false) }
-    
     val calendar = remember(selectedDate) {
         Calendar.getInstance().apply { timeInMillis = selectedDate }
     }
@@ -25,8 +23,8 @@ fun ExpenseDatePicker(
     val year = calendar.get(Calendar.YEAR)
     
     val months = listOf(
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+        "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
     )
     
     Column(modifier = modifier) {
@@ -36,27 +34,30 @@ fun ExpenseDatePicker(
             color = MaterialTheme.colorScheme.onSurface
         )
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Day dropdown
             var dayExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 expanded = dayExpanded,
                 onExpandedChange = { dayExpanded = it },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(0.8f)
             ) {
                 OutlinedTextField(
                     value = day.toString(),
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Tanggal") },
+                    label = { Text("Tgl") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
-                    modifier = Modifier.menuAnchor(),
-                    singleLine = true
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .fillMaxWidth(),
+                    singleLine = true,
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                 )
                 ExposedDropdownMenu(
                     expanded = dayExpanded,
@@ -78,6 +79,7 @@ fun ExpenseDatePicker(
                 }
             }
 
+            // Month dropdown
             var monthExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 expanded = monthExpanded,
@@ -90,8 +92,11 @@ fun ExpenseDatePicker(
                     readOnly = true,
                     label = { Text("Bulan") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = monthExpanded) },
-                    modifier = Modifier.menuAnchor(),
-                    singleLine = true
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .fillMaxWidth(),
+                    singleLine = true,
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                 )
                 ExposedDropdownMenu(
                     expanded = monthExpanded,
@@ -101,8 +106,12 @@ fun ExpenseDatePicker(
                         DropdownMenuItem(
                             text = { Text(monthName) },
                             onClick = {
+                                val tempCalendar = Calendar.getInstance().apply {
+                                    set(year, index, 1)
+                                }
+                                val maxDay = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
                                 val newCalendar = Calendar.getInstance().apply {
-                                    set(year, index, day.coerceAtMost(getActualMaximum(Calendar.DAY_OF_MONTH)))
+                                    set(year, index, day.coerceAtMost(maxDay))
                                 }
                                 onDateSelected(newCalendar.timeInMillis)
                                 monthExpanded = false
@@ -112,6 +121,7 @@ fun ExpenseDatePicker(
                 }
             }
 
+            // Year dropdown
             var yearExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 expanded = yearExpanded,
@@ -124,8 +134,11 @@ fun ExpenseDatePicker(
                     readOnly = true,
                     label = { Text("Tahun") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = yearExpanded) },
-                    modifier = Modifier.menuAnchor(),
-                    singleLine = true
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .fillMaxWidth(),
+                    singleLine = true,
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                 )
                 ExposedDropdownMenu(
                     expanded = yearExpanded,
@@ -136,8 +149,12 @@ fun ExpenseDatePicker(
                         DropdownMenuItem(
                             text = { Text(y.toString()) },
                             onClick = {
+                                val tempCalendar = Calendar.getInstance().apply {
+                                    set(y, month, 1)
+                                }
+                                val maxDay = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
                                 val newCalendar = Calendar.getInstance().apply {
-                                    set(y, month, day.coerceAtMost(getActualMaximum(Calendar.DAY_OF_MONTH)))
+                                    set(y, month, day.coerceAtMost(maxDay))
                                 }
                                 onDateSelected(newCalendar.timeInMillis)
                                 yearExpanded = false
@@ -149,3 +166,4 @@ fun ExpenseDatePicker(
         }
     }
 }
+

@@ -4,7 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,6 +63,10 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
     val categorySpending by viewModel.categorySpending.collectAsState()
     val categoryPercentages by viewModel.categoryPercentages.collectAsState()
     val dailySpending by viewModel.dailySpending.collectAsState()
+    val selectedWeekOffset by viewModel.selectedWeekOffset.collectAsState()
+    
+    // State for expandable categories
+    var expandedCategoryId by remember { mutableStateOf<Long?>(null) }
     
     Scaffold(
         topBar = {
@@ -143,7 +151,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                     
                     Text(
                         text = when (selectedPeriod) {
-                            ReportPeriod.WEEK -> "Minggu ini"
+                            ReportPeriod.WEEK -> viewModel.getWeekDateRangeText(selectedWeekOffset)
                             ReportPeriod.MONTH -> "${viewModel.getMonthName(selectedMonth)} $selectedYear"
                             ReportPeriod.YEAR -> selectedYear.toString()
                         },
@@ -393,67 +401,128 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-                    TextButton(onClick = { /* See all */ }) {
-                        Text(
-                            "Lihat Semua",
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
                 }
             }
 
             items(categorySpending) { spending ->
+                val isExpanded = expandedCategoryId == spending.categoryId
+                val rotationState by animateFloatAsState(
+                    targetValue = if (isExpanded) 180f else 0f,
+                    label = "chevron_rotation"
+                )
+                
+                
+                val categoryExpenses by viewModel.getExpensesForCategory(spending.categoryId)
+                    .collectAsState(initial = emptyList())
+                
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     )
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
+                    Column {
+                        Row(
                             modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(spending.categoryColor).copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .clickable {
+                                    expandedCategoryId = if (isExpanded) null else spending.categoryId
+                                }
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = getCategoryIcon(spending.categoryIcon),
-                                contentDescription = null,
-                                tint = Color(spending.categoryColor)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(spending.categoryColor).copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = getCategoryIcon(spending.categoryIcon),
+                                    contentDescription = null,
+                                    tint = Color(spending.categoryColor)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = spending.categoryName,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                val percentage = categoryPercentages.find { 
+                                    it.first.categoryId == spending.categoryId 
+                                }?.second ?: 0.0
+                                Text(
+                                    text = "${percentage.toInt()}%",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                             Text(
-                                text = spending.categoryName,
+                                text = "-${formatCurrency(spending.totalAmount)}",
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.error
                             )
-                            val percentage = categoryPercentages.find { 
-                                it.first.categoryId == spending.categoryId 
-                            }?.second ?: 0.0
-                            Text(
-                                text = "${percentage.toInt()}%",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.ExpandMore,
+                                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                modifier = Modifier.rotate(rotationState),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        Text(
-                            text = "-${formatCurrency(spending.totalAmount)}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        
+                        // Expanded content - show transactions
+                        if (isExpanded && categoryExpenses.isNotEmpty()) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            Column(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                categoryExpenses.forEach { expense ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = expense.description.ifEmpty { spending.categoryName },
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale("id", "ID"))
+                                                    .format(java.util.Date(expense.date)),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Text(
+                                            text = if (expense.isIncome) "+${formatCurrency(expense.amount)}" 
+                                                   else "-${formatCurrency(expense.amount)}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = if (expense.isIncome) Color(0xFF4CAF50) 
+                                                   else MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

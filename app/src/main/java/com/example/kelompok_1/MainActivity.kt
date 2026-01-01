@@ -33,14 +33,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         val repository = (application as ExpenseTrackerApplication).repository
-        
+
         setContent {
             val context = LocalContext.current
             val isDarkMode by ThemePreferences.isDarkMode(context).collectAsState(initial = false)
             val scope = rememberCoroutineScope()
-            
+
             ExpenseTrackerTheme(darkTheme = isDarkMode) {
                 val viewModel: DashboardViewModel = viewModel(
                     factory = DashboardViewModel.Factory(repository)
@@ -78,22 +78,10 @@ fun MainScreen(
     val expensesForSelectedDate by viewModel.expensesForSelectedDate.collectAsState()
     val totalForSelectedDate by viewModel.totalForSelectedDate.collectAsState()
     val isToday by viewModel.isToday.collectAsState()
-    
+
     Scaffold(
         bottomBar = {
-            MainBottomNavBar(
-                currentRoute = "dashboard",
-                onNavigate = { route ->
-                    val intent = when (route) {
-                        "category" -> Intent(context, CategoryActivity::class.java)
-                        "add" -> Intent(context, AddExpenseActivity::class.java)
-                        "history" -> Intent(context, HistoryActivity::class.java)
-                        "reports" -> Intent(context, ReportsActivity::class.java)
-                        else -> null
-                    }
-                    intent?.let { context.startActivity(it) }
-                }
-            )
+            BottomNavBar(currentRoute = "dashboard")
         },
         topBar = {
             TopAppBar(
@@ -177,7 +165,7 @@ fun MainScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-                    TextButton(onClick = { 
+                    TextButton(onClick = {
                         context.startActivity(Intent(context, HistoryActivity::class.java))
                     }) {
                         Text(
@@ -226,80 +214,9 @@ fun MainScreen(
                     )
                 }
             }
-            
+
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun MainBottomNavBar(
-    currentRoute: String,
-    onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val items = listOf(
-        BottomNavItem("Home", Icons.Default.Home, "dashboard"),
-        BottomNavItem("Categories", Icons.Default.Category, "category"),
-        BottomNavItem("Add", Icons.Default.Add, "add"),
-        BottomNavItem("History", Icons.Default.History, "history"),
-        BottomNavItem("Reports", Icons.Default.BarChart, "reports")
-    )
-    
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            items.forEach { item ->
-                if (item.route == "add") {
-                    FloatingActionButton(
-                        onClick = { onNavigate("add") },
-                        modifier = Modifier.size(56.dp),
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = CircleShape
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add Expense",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                } else {
-                    val isSelected = currentRoute == item.route
-                    IconButton(
-                        onClick = { if (!isSelected) onNavigate(item.route) },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.label,
-                                tint = if (isSelected) MaterialTheme.colorScheme.primary 
-                                       else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Text(
-                                text = item.label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary 
-                                        else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
             }
         }
     }

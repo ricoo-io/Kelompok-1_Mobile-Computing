@@ -255,7 +255,6 @@ fun AddExpenseScreen(
                 }
             }
 
-            // Card untuk Nama Transaksi (WAJIB)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),

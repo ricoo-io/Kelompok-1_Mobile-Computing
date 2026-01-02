@@ -275,7 +275,6 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // Pengeluaran Button
                     TextButton(
                         onClick = { viewModel.toggleShowIncome(false) },
                         modifier = Modifier
@@ -301,8 +300,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                             fontWeight = if (!showIncome) FontWeight.SemiBold else FontWeight.Normal
                         )
                     }
-                    
-                    // Pemasukan Button
+
                     TextButton(
                         onClick = { viewModel.toggleShowIncome(true) },
                         modifier = Modifier

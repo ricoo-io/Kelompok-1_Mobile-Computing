@@ -43,9 +43,10 @@ class AddExpenseActivity : ComponentActivity() {
         
         val repository = (application as ExpenseTrackerApplication).repository
         val expenseId = intent.getLongExtra(EXTRA_EXPENSE_ID, -1L).takeIf { it != -1L }
+        val initialDarkMode = ThemePreferences.isDarkModeBlocking(this)
         
         setContent {
-            val isDarkMode by ThemePreferences.isDarkMode(this).collectAsState(initial = false)
+            val isDarkMode by ThemePreferences.isDarkMode(this).collectAsState(initial = initialDarkMode)
             
             ExpenseTrackerTheme(darkTheme = isDarkMode) {
                 val viewModel: ExpenseViewModel = viewModel(

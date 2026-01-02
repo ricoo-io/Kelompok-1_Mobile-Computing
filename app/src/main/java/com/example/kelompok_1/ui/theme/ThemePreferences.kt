@@ -1,13 +1,16 @@
 package com.example.kelompok_1.ui.theme
 
 import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -19,10 +22,28 @@ object ThemePreferences {
             preferences[IS_DARK_MODE] ?: false
         }
     }
+
+    fun isDarkModeBlocking(context: Context): Boolean {
+        return runBlocking {
+            context.dataStore.data.first()[IS_DARK_MODE] ?: false
+        }
+    }
     
     suspend fun setDarkMode(context: Context, isDarkMode: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_DARK_MODE] = isDarkMode
         }
+        AppCompatDelegate.setDefaultNightMode(
+            if (isDarkMode) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
+    }
+
+    fun applyTheme(context: Context) {
+        val isDark = isDarkModeBlocking(context)
+        AppCompatDelegate.setDefaultNightMode(
+            if (isDark) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
     }
 }

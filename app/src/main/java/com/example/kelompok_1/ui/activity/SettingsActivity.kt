@@ -29,10 +29,11 @@ class SettingsActivity : ComponentActivity() {
         overridePendingTransition(0, 0)
         
         val repository = (application as ExpenseTrackerApplication).repository
+        val initialDarkMode = ThemePreferences.isDarkModeBlocking(this)
         
         setContent {
             val context = LocalContext.current
-            val isDarkMode by ThemePreferences.isDarkMode(context).collectAsState(initial = false)
+            val isDarkMode by ThemePreferences.isDarkMode(context).collectAsState(initial = initialDarkMode)
             val scope = rememberCoroutineScope()
             
             ExpenseTrackerTheme(darkTheme = isDarkMode) {
@@ -92,7 +93,7 @@ fun SettingsScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Theme Toggle
+            
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),

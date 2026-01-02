@@ -39,10 +39,11 @@ class MainActivity : ComponentActivity() {
         overridePendingTransition(0, 0)
 
         val repository = (application as ExpenseTrackerApplication).repository
+        val initialDarkMode = ThemePreferences.isDarkModeBlocking(this)
 
         setContent {
             val context = LocalContext.current
-            val isDarkMode by ThemePreferences.isDarkMode(context).collectAsState(initial = false)
+            val isDarkMode by ThemePreferences.isDarkMode(context).collectAsState(initial = initialDarkMode)
             val scope = rememberCoroutineScope()
 
             ExpenseTrackerTheme(darkTheme = isDarkMode) {

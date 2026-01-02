@@ -38,9 +38,10 @@ class ReportsActivity : ComponentActivity() {
         overridePendingTransition(0, 0)
         
         val repository = (application as ExpenseTrackerApplication).repository
+        val initialDarkMode = ThemePreferences.isDarkModeBlocking(this)
         
         setContent {
-            val isDarkMode by ThemePreferences.isDarkMode(this).collectAsState(initial = false)
+            val isDarkMode by ThemePreferences.isDarkMode(this).collectAsState(initial = initialDarkMode)
             
             ExpenseTrackerTheme(darkTheme = isDarkMode) {
                 val viewModel: ReportsViewModel = viewModel(

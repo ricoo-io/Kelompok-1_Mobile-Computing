@@ -75,6 +75,10 @@ fun MainScreen(
     val monthlyExpense by viewModel.monthlyExpense.collectAsState()
     val recentTransactions by viewModel.recentTransactions.collectAsState()
 
+    val topCategory by viewModel.topCategory.collectAsState()
+    val expenseChangePercent by viewModel.expenseChangePercent.collectAsState()
+    val averageDailySpending by viewModel.averageDailySpending.collectAsState()
+
     val selectedDate by viewModel.selectedDate.collectAsState()
     val expensesForSelectedDate by viewModel.expensesForSelectedDate.collectAsState()
     val totalForSelectedDate by viewModel.totalForSelectedDate.collectAsState()
@@ -137,9 +141,18 @@ fun MainScreen(
                     )
                 }
             }
+            
+            item {
+                StatsCard(
+                    topCategory = topCategory,
+                    expenseChangePercent = expenseChangePercent,
+                    averageDailySpending = averageDailySpending,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                )
+            }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 DailyExpensesPager(
                     selectedDate = selectedDate,
                     expenses = expensesForSelectedDate,

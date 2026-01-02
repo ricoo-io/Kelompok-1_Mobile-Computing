@@ -68,6 +68,56 @@ class DashboardViewModel(
         .getTotalExpenses(monthStart, monthEnd)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
     
+    // Last month data for comparison
+    private val lastMonthStart: Long
+    private val lastMonthEnd: Long
+    
+    init {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.add(java.util.Calendar.MONTH, -1)
+        calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        calendar.set(java.util.Calendar.MINUTE, 0)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        lastMonthStart = calendar.timeInMillis
+        
+        calendar.set(java.util.Calendar.DAY_OF_MONTH, calendar.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 23)
+        calendar.set(java.util.Calendar.MINUTE, 59)
+        calendar.set(java.util.Calendar.SECOND, 59)
+        lastMonthEnd = calendar.timeInMillis
+    }
+    
+    val lastMonthExpense: StateFlow<Double> = repository
+        .getTotalExpenses(lastMonthStart, lastMonthEnd)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    
+    // Calculate percentage change from last month
+    val expenseChangePercent: StateFlow<Double> = combine(monthlyExpense, lastMonthExpense) { current, last ->
+        if (last > 0) {
+            ((current - last) / last) * 100
+        } else if (current > 0) {
+            100.0 // If last month was 0 but this month has spending
+        } else {
+            0.0
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    
+    // Top spending category
+    val topCategory: StateFlow<com.example.kelompok_1.data.model.CategorySpending?> = categorySpending
+        .map { list -> list.maxByOrNull { it.totalAmount } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    
+    // Average daily spending this month
+    val averageDailySpending: StateFlow<Double> = monthlyExpense
+        .map { total ->
+            val calendar = java.util.Calendar.getInstance()
+            val dayOfMonth = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+            if (dayOfMonth > 0) total / dayOfMonth else 0.0
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    
 
     private val _selectedDate = MutableStateFlow(System.currentTimeMillis())
     val selectedDate: StateFlow<Long> = _selectedDate.asStateFlow()

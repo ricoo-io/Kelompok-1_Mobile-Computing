@@ -33,12 +33,6 @@
             android:theme="@style/Theme.Kelompok_1" />
 
         <activity
-            android:name=".ui.activity.CategoryActivity"
-            android:exported="false"
-            android:label="Kategori"
-            android:theme="@style/Theme.Kelompok_1" />
-
-        <activity
             android:name=".ui.activity.HistoryActivity"
             android:exported="false"
             android:label="Riwayat"
@@ -48,6 +42,12 @@
             android:name=".ui.activity.ReportsActivity"
             android:exported="false"
             android:label="Laporan"
+            android:theme="@style/Theme.Kelompok_1" />
+
+        <activity
+            android:name=".ui.activity.SettingsActivity"
+            android:exported="false"
+            android:label="Pengaturan"
             android:theme="@style/Theme.Kelompok_1" />
 
     </application>

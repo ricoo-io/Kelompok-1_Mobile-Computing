@@ -39,10 +39,10 @@ fun BottomNavBar(
 
     val items = listOf(
         BottomNavItem("Home", Icons.Default.Home, "dashboard"),
-        BottomNavItem("Category", Icons.Default.Category, "category"),
+        BottomNavItem("Reports", Icons.Default.BarChart, "reports"),
         BottomNavItem("Add", Icons.Default.Add, "add"),
         BottomNavItem("History", Icons.Default.History, "history"),
-        BottomNavItem("Reports", Icons.Default.BarChart, "reports")
+        BottomNavItem("Settings", Icons.Default.Settings, "settings")
     )
 
     Box(
@@ -96,15 +96,14 @@ fun BottomNavBar(
                                 if (currentRoute != item.route) {
                                     val intent = when (item.route) {
                                         "dashboard" -> Intent(context, MainActivity::class.java)
-                                        "category" -> Intent(context, CategoryActivity::class.java)
-                                        "history" -> Intent(context, HistoryActivity::class.java)
                                         "reports" -> Intent(context, ReportsActivity::class.java)
+                                        "history" -> Intent(context, HistoryActivity::class.java)
+                                        "settings" -> Intent(context, SettingsActivity::class.java)
                                         else -> null
                                     }
                                     intent?.let {
                                         it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                                         context.startActivity(it)
-                                        // Hilangkan animasi transisi agar bottom bar tidak terlihat bergeser
                                         (context as? Activity)?.overridePendingTransition(0, 0)
                                     }
                                 }

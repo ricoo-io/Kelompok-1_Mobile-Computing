@@ -64,6 +64,17 @@ interface ExpenseDao {
     fun getSpendingByCategory(startDate: Long, endDate: Long): Flow<List<CategorySpending>>
     
     @Query("""
+        SELECT c.id as categoryId, c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor,
+               COALESCE(SUM(e.amount), 0) as totalAmount
+        FROM categories c
+        LEFT JOIN expenses e ON c.id = e.categoryId AND e.date BETWEEN :startDate AND :endDate AND e.isIncome = 1
+        GROUP BY c.id
+        HAVING totalAmount > 0
+        ORDER BY totalAmount DESC
+    """)
+    fun getIncomeByCategory(startDate: Long, endDate: Long): Flow<List<CategorySpending>>
+    
+    @Query("""
         SELECT date / 86400000 * 86400000 as date, SUM(amount) as totalAmount
         FROM expenses
         WHERE date BETWEEN :startDate AND :endDate AND isIncome = 0
@@ -94,4 +105,7 @@ interface ExpenseDao {
     
     @Query("DELETE FROM expenses WHERE id = :id")
     suspend fun deleteById(id: Long)
+    
+    @Query("DELETE FROM expenses")
+    suspend fun deleteAllExpenses()
 }

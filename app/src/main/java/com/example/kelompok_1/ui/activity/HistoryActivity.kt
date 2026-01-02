@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kelompok_1.ExpenseTrackerApplication
 import com.example.kelompok_1.data.model.ExpenseWithCategory
+import com.example.kelompok_1.data.repository.ExpenseRepository
 import com.example.kelompok_1.ui.components.*
 import com.example.kelompok_1.ui.theme.*
 import com.example.kelompok_1.ui.viewmodel.HistoryViewModel
@@ -33,12 +34,12 @@ class HistoryActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         overridePendingTransition(0, 0)
-        
+
         val repository = (application as ExpenseTrackerApplication).repository
-        
+
         setContent {
             val isDarkMode by ThemePreferences.isDarkMode(this).collectAsState(initial = false)
-            
+
             ExpenseTrackerTheme(darkTheme = isDarkMode) {
                 val viewModel: HistoryViewModel = viewModel(
                     factory = HistoryViewModel.Factory(repository)
@@ -66,14 +67,6 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                         text = "Riwayat Transaksi",
                         fontWeight = FontWeight.SemiBold
                     )
-                },
-                actions = {
-                    IconButton(onClick = {  }) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Filter"
-                        )
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -133,9 +126,81 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilterChip(
-                    selected = filterState.selectedCategoryId == null && filterState.startDate == null,
-                    onClick = { viewModel.clearFilters() },
+                    selected = filterState.transactionType == com.example.kelompok_1.ui.viewmodel.TransactionType.ALL,
+                    onClick = { viewModel.setTransactionType(com.example.kelompok_1.ui.viewmodel.TransactionType.ALL) },
                     label = { Text("Semua") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+                
+                FilterChip(
+                    selected = filterState.transactionType == com.example.kelompok_1.ui.viewmodel.TransactionType.EXPENSE,
+                    onClick = { viewModel.setTransactionType(com.example.kelompok_1.ui.viewmodel.TransactionType.EXPENSE) },
+                    label = { Text("Pengeluaran") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ArrowUpward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.error,
+                        selectedLabelColor = Color.White,
+                        selectedLeadingIconColor = Color.White
+                    )
+                )
+                
+                FilterChip(
+                    selected = filterState.transactionType == com.example.kelompok_1.ui.viewmodel.TransactionType.INCOME,
+                    onClick = { viewModel.setTransactionType(com.example.kelompok_1.ui.viewmodel.TransactionType.INCOME) },
+                    label = { Text("Pemasukan") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDownward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF4CAF50),
+                        selectedLabelColor = Color.White,
+                        selectedLeadingIconColor = Color.White
+                    )
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = filterState.startDate == null && filterState.selectedCategoryId == null,
+                    onClick = { viewModel.clearFilters() },
+                    label = { Text("Semua Waktu") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+                
+                FilterChip(
+                    selected = filterState.startDate == ExpenseRepository.getStartOfWeek(),
+                    onClick = {
+                        if (filterState.startDate == ExpenseRepository.getStartOfWeek()) {
+                            viewModel.setDateRange(null, null)
+                        } else {
+                            viewModel.setThisWeekFilter()
+                        }
+                    },
+                    label = { Text("Minggu Ini") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primary,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -143,15 +208,15 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                 )
 
                 FilterChip(
-                    selected = filterState.startDate != null,
+                    selected = filterState.startDate == ExpenseRepository.getStartOfMonth(),
                     onClick = {
-                        if (filterState.startDate != null) {
+                        if (filterState.startDate == ExpenseRepository.getStartOfMonth()) {
                             viewModel.setDateRange(null, null)
                         } else {
                             viewModel.setThisMonthFilter()
                         }
                     },
-                    label = { Text("Bulan ini") },
+                    label = { Text("Bulan Ini") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primary,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimary

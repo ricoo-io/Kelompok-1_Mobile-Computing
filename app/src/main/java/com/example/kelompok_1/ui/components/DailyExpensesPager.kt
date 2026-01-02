@@ -264,5 +264,6 @@ private fun formatFullDate(timestamp: Long): String {
 
 private fun formatCurrencyRupiah(amount: Double): String {
     val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+    format.maximumFractionDigits = 0
     return format.format(amount)
 }

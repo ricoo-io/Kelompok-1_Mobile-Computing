@@ -6,10 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.kelompok_1.data.dao.BudgetDao
 import com.example.kelompok_1.data.dao.CategoryDao
 import com.example.kelompok_1.data.dao.ExpenseDao
-import com.example.kelompok_1.data.model.Budget
 import com.example.kelompok_1.data.model.Category
 import com.example.kelompok_1.data.model.DefaultCategories
 import com.example.kelompok_1.data.model.Expense
@@ -18,15 +16,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [Expense::class, Category::class, Budget::class],
-    version = 3,
+    entities = [Expense::class, Category::class],
+    version = 4,
     exportSchema = false
 )
 abstract class ExpenseDatabase : RoomDatabase() {
     
     abstract fun expenseDao(): ExpenseDao
     abstract fun categoryDao(): CategoryDao
-    abstract fun budgetDao(): BudgetDao
     
     companion object {
         @Volatile
@@ -57,7 +54,13 @@ abstract class ExpenseDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE expenses ADD COLUMN name TEXT NOT NULL DEFAULT ''")
                 // Copy existing description to name field
                 db.execSQL("UPDATE expenses SET name = description")
-                // Clear description for old records (optional, keeping it as notes)
+            }
+        }
+        
+        // Migration from version 3 to 4: drop budgets table (feature removed)
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS budgets")
             }
         }
         
@@ -68,7 +71,7 @@ abstract class ExpenseDatabase : RoomDatabase() {
                     ExpenseDatabase::class.java,
                     "expense_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
@@ -88,4 +91,3 @@ abstract class ExpenseDatabase : RoomDatabase() {
         }
     }
 }
-

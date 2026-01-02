@@ -11,8 +11,7 @@ class ExpenseTrackerApplication : Application() {
     val repository by lazy {
         ExpenseRepository(
             database.expenseDao(),
-            database.categoryDao(),
-            database.budgetDao()
+            database.categoryDao()
         )
     }
 }

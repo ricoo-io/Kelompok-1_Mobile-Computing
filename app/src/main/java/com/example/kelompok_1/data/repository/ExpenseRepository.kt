@@ -1,6 +1,5 @@
 package com.example.kelompok_1.data.repository
 
-import com.example.kelompok_1.data.dao.BudgetDao
 import com.example.kelompok_1.data.dao.CategoryDao
 import com.example.kelompok_1.data.dao.ExpenseDao
 import com.example.kelompok_1.data.model.*
@@ -9,8 +8,7 @@ import java.util.*
 
 class ExpenseRepository(
     private val expenseDao: ExpenseDao,
-    private val categoryDao: CategoryDao,
-    private val budgetDao: BudgetDao
+    private val categoryDao: CategoryDao
 ) {
 
     fun getAllExpenses(): Flow<List<ExpenseWithCategory>> = expenseDao.getAllExpensesWithCategory()
@@ -29,6 +27,9 @@ class ExpenseRepository(
     
     fun getSpendingByCategory(startDate: Long, endDate: Long): Flow<List<CategorySpending>> =
         expenseDao.getSpendingByCategory(startDate, endDate)
+    
+    fun getIncomeByCategory(startDate: Long, endDate: Long): Flow<List<CategorySpending>> =
+        expenseDao.getIncomeByCategory(startDate, endDate)
     
     fun getDailySpending(startDate: Long, endDate: Long): Flow<List<DailySpending>> =
         expenseDao.getDailySpending(startDate, endDate)
@@ -63,22 +64,11 @@ class ExpenseRepository(
     suspend fun deleteCategory(category: Category) = categoryDao.delete(category)
     
     suspend fun deleteCategoryById(id: Long) = categoryDao.deleteById(id)
-
     
-    fun getBudgetsByMonth(month: Int, year: Int): Flow<List<Budget>> =
-        budgetDao.getBudgetsByMonth(month, year)
-    
-    suspend fun getBudget(categoryId: Long, month: Int, year: Int): Budget? =
-        budgetDao.getBudget(categoryId, month, year)
-    
-    fun getTotalBudget(month: Int, year: Int): Flow<Double> =
-        budgetDao.getTotalBudget(month, year)
-    
-    suspend fun insertBudget(budget: Budget): Long = budgetDao.insert(budget)
-    
-    suspend fun updateBudget(budget: Budget) = budgetDao.update(budget)
-    
-    suspend fun deleteBudget(budget: Budget) = budgetDao.delete(budget)
+    // Clear all user data (only transactions)
+    suspend fun clearAllData() {
+        expenseDao.deleteAllExpenses()
+    }
 
     
     companion object {

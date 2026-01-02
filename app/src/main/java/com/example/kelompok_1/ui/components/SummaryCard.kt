@@ -26,6 +26,8 @@ fun BalanceCard(
     expense: Double,
     modifier: Modifier = Modifier
 ) {
+    val balancePrefix = if (totalBalance >= 0) "+" else "-"
+    
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -51,25 +53,21 @@ fun BalanceCard(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Total Balance",
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                            fontSize = 14.sp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            imageVector = Icons.Default.Visibility,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
+                    Text(
+                        text = "BULAN INI",
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                        fontSize = 12.sp,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Total Balance",
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                        fontSize = 14.sp
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = formatCurrency(totalBalance),
+                        text = "$balancePrefix${formatCurrency(kotlin.math.abs(totalBalance))}",
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold

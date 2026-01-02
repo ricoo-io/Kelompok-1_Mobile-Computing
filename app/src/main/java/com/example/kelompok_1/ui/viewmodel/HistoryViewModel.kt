@@ -14,8 +14,13 @@ data class HistoryFilterState(
     val searchQuery: String = "",
     val selectedCategoryId: Long? = null,
     val startDate: Long? = null,
-    val endDate: Long? = null
+    val endDate: Long? = null,
+    val transactionType: TransactionType = TransactionType.ALL
 )
+
+enum class TransactionType {
+    ALL, INCOME, EXPENSE
+}
 
 class HistoryViewModel(
     private val repository: ExpenseRepository
@@ -50,7 +55,13 @@ class HistoryViewModel(
             val matchesDateRange = (filter.startDate == null || expense.date >= filter.startDate) &&
                 (filter.endDate == null || expense.date <= filter.endDate)
             
-            matchesSearch && matchesCategory && matchesDateRange
+            val matchesType = when (filter.transactionType) {
+                TransactionType.ALL -> true
+                TransactionType.INCOME -> expense.isIncome
+                TransactionType.EXPENSE -> !expense.isIncome
+            }
+            
+            matchesSearch && matchesCategory && matchesDateRange && matchesType
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
@@ -91,6 +102,19 @@ class HistoryViewModel(
                 endDate = ExpenseRepository.getEndOfDay()
             )
         }
+    }
+    
+    fun setThisWeekFilter() {
+        _filterState.update { 
+            it.copy(
+                startDate = ExpenseRepository.getStartOfWeek(),
+                endDate = ExpenseRepository.getEndOfDay()
+            )
+        }
+    }
+    
+    fun setTransactionType(type: TransactionType) {
+        _filterState.update { it.copy(transactionType = type) }
     }
     
     fun deleteExpense(expenseId: Long) {

@@ -80,6 +80,33 @@ class ReportsViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
+    // Toggle for showing income vs expense
+    private val _showIncome = MutableStateFlow(false)
+    val showIncome: StateFlow<Boolean> = _showIncome.asStateFlow()
+    
+    // Income by category
+    val categoryIncome: StateFlow<List<CategorySpending>> = dateRange
+        .flatMapLatest { (start, end) ->
+            repository.getIncomeByCategory(start, end)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    
+    // Income percentages
+    val categoryIncomePercentages: StateFlow<List<Pair<CategorySpending, Double>>> = combine(
+        categoryIncome,
+        totalIncome
+    ) { income, total ->
+        if (total > 0) {
+            income.map { it to (it.totalAmount / total * 100) }
+        } else {
+            emptyList()
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    
+    fun toggleShowIncome(showIncome: Boolean) {
+        _showIncome.value = showIncome
+    }
+    
 
     val categoryPercentages: StateFlow<List<Pair<CategorySpending, Double>>> = combine(
         categorySpending,

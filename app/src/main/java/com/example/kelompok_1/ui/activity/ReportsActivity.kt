@@ -65,8 +65,13 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
     val categoryPercentages by viewModel.categoryPercentages.collectAsState()
     val dailySpending by viewModel.dailySpending.collectAsState()
     val selectedWeekOffset by viewModel.selectedWeekOffset.collectAsState()
-    
-    // State for expandable categories
+    val showIncome by viewModel.showIncome.collectAsState()
+    val categoryIncome by viewModel.categoryIncome.collectAsState()
+    val categoryIncomePercentages by viewModel.categoryIncomePercentages.collectAsState()
+
+    val currentCategoryData = if (showIncome) categoryIncome else categorySpending
+    val currentPercentages = if (showIncome) categoryIncomePercentages else categoryPercentages
+
     var expandedCategoryId by remember { mutableStateOf<Long?>(null) }
     
     Scaffold(
@@ -261,6 +266,71 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
             }
 
             item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Pengeluaran Button
+                    TextButton(
+                        onClick = { viewModel.toggleShowIncome(false) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                if (!showIncome) MaterialTheme.colorScheme.primary 
+                                else Color.Transparent
+                            ),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (!showIncome) MaterialTheme.colorScheme.onPrimary 
+                                           else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowUpward,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Pengeluaran",
+                            fontWeight = if (!showIncome) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                    }
+                    
+                    // Pemasukan Button
+                    TextButton(
+                        onClick = { viewModel.toggleShowIncome(true) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                if (showIncome) MaterialTheme.colorScheme.primary 
+                                else Color.Transparent
+                            ),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (showIncome) MaterialTheme.colorScheme.onPrimary 
+                                           else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDownward,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Pemasukan",
+                            fontWeight = if (showIncome) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+
+            item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -272,14 +342,14 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "Tren Pengeluaran",
+                            text = if (showIncome) "Tren Pemasukan" else "Tren Pengeluaran",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        if (dailySpending.isEmpty()) {
+                        if (currentCategoryData.isEmpty()) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -293,7 +363,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                             }
                         } else {
                             CategoryBarChart(
-                                categorySpending = categorySpending,
+                                categorySpending = currentCategoryData,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -320,7 +390,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        if (categorySpending.isEmpty()) {
+                        if (currentCategoryData.isEmpty()) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -340,7 +410,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                             ) {
 
                                 CategoryPieChart(
-                                    categorySpending = categorySpending,
+                                    categorySpending = currentCategoryData,
                                     modifier = Modifier.size(150.dp)
                                 )
                                 
@@ -349,7 +419,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                                     modifier = Modifier.padding(start = 16.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    categoryPercentages.take(5).forEach { (spending, percentage) ->
+                                    currentPercentages.take(5).forEach { (spending, percentage) ->
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
@@ -390,7 +460,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Rincian Pengeluaran",
+                        text = if (showIncome) "Rincian Pemasukan" else "Rincian Pengeluaran",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onBackground
@@ -398,7 +468,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                 }
             }
 
-            items(categorySpending) { spending ->
+            items(currentCategoryData) { spending ->
                 val isExpanded = expandedCategoryId == spending.categoryId
                 val rotationState by animateFloatAsState(
                     targetValue = if (isExpanded) 180f else 0f,
@@ -408,6 +478,8 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                 
                 val categoryExpenses by viewModel.getExpensesForCategory(spending.categoryId)
                     .collectAsState(initial = emptyList())
+
+                val filteredExpenses = categoryExpenses.filter { it.isIncome == showIncome }
                 
                 Card(
                     modifier = Modifier
@@ -451,7 +523,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                val percentage = categoryPercentages.find { 
+                                val percentage = currentPercentages.find { 
                                     it.first.categoryId == spending.categoryId 
                                 }?.second ?: 0.0
                                 Text(
@@ -461,10 +533,10 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                                 )
                             }
                             Text(
-                                text = "-${formatCurrency(spending.totalAmount)}",
+                                text = "${if (showIncome) "+" else "-"}${formatCurrency(spending.totalAmount)}",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.error
+                                color = if (showIncome) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
@@ -474,9 +546,8 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        
-                        // Expanded content - show transactions
-                        if (isExpanded && categoryExpenses.isNotEmpty()) {
+
+                        if (isExpanded && filteredExpenses.isNotEmpty()) {
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 color = MaterialTheme.colorScheme.outlineVariant
@@ -484,7 +555,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                             Column(
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             ) {
-                                categoryExpenses.forEach { expense ->
+                                filteredExpenses.forEach { expense ->
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()

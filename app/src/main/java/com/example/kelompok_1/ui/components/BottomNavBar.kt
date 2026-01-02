@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kelompok_1.MainActivity
 import com.example.kelompok_1.ui.activity.*
+import com.example.kelompok_1.ui.theme.LightBlueAccent
+import androidx.compose.foundation.isSystemInDarkTheme
 
 data class BottomNavItem(
     val label: String,
@@ -45,6 +47,8 @@ fun BottomNavBar(
         BottomNavItem("Settings", Icons.Default.Settings, "settings")
     )
 
+    val isDarkMode = isSystemInDarkTheme()
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -54,7 +58,7 @@ fun BottomNavBar(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface,
+            color = if (isDarkMode) MaterialTheme.colorScheme.surface else LightBlueAccent,
             tonalElevation = 8.dp,
             shadowElevation = 4.dp
         ) {
@@ -91,6 +95,7 @@ fun BottomNavBar(
                         BottomNavItemButton(
                             item = item,
                             isSelected = currentRoute == item.route,
+                            isDarkMode = isDarkMode,
                             modifier = Modifier.weight(1f),
                             onClick = {
                                 if (currentRoute != item.route) {
@@ -120,6 +125,7 @@ fun BottomNavBar(
 private fun BottomNavItemButton(
     item: BottomNavItem,
     isSelected: Boolean,
+    isDarkMode: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {

@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -91,23 +94,29 @@ fun MainScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "PanDana",
-                        fontWeight = FontWeight.Bold
+                    Image(
+                        painter = painterResource(
+                            id = if (isDarkMode) R.drawable.logo_pandana_dark
+                                 else R.drawable.logo_pandana_light
+                        ),
+                        contentDescription = "PanDana Logo",
+                        modifier = Modifier.height(36.dp),
+                        contentScale = ContentScale.Fit
                     )
                 },
                 actions = {
                     IconButton(onClick = onToggleTheme) {
                         Icon(
                             imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                            contentDescription = if (isDarkMode) "Light Mode" else "Dark Mode"
+                            contentDescription = if (isDarkMode) "Light Mode" else "Dark Mode",
+                            tint = if (isDarkMode) LightBlueAccent else MaterialTheme.colorScheme.primary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    actionIconContentColor = MaterialTheme.colorScheme.primary
                 )
             )
         },
@@ -126,7 +135,7 @@ fun MainScreen(
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.surface,
                                     MaterialTheme.colorScheme.primaryContainer
                                 )
                             )

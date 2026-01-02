@@ -4,8 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kelompok_1.ExpenseTrackerApplication
@@ -51,7 +55,7 @@ class HistoryActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel) {
     val filterState by viewModel.filterState.collectAsState()
@@ -84,40 +88,209 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            OutlinedTextField(
-                value = filterState.searchQuery,
-                onValueChange = { viewModel.updateSearchQuery(it) },
-                placeholder = { Text("Cari transaksi...") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                trailingIcon = {
-                    if (filterState.searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.updateSearchQuery("") }) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = "Clear",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            var showCategoryDropdown by remember { mutableStateOf(false) }
+            val selectedCategory = categories.find { it.id == filterState.selectedCategoryId }
+            val expenseCategories = categories.filter { it.type == "expense" }
+            val incomeCategories = categories.filter { it.type == "income" }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = filterState.searchQuery,
+                    onValueChange = { viewModel.updateSearchQuery(it) },
+                    placeholder = { Text("Cari transaksi...") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingIcon = {
+                        if (filterState.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.updateSearchQuery("") }) {
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = "Clear",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    singleLine = true
+                )
+
+                Box {
+                    FilledTonalIconButton(
+                        onClick = { showCategoryDropdown = true },
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = if (selectedCategory != null) 
+                                Color(selectedCategory.color).copy(alpha = 0.2f)
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (selectedCategory != null) 
+                                getCategoryIcon(selectedCategory.icon)
+                            else Icons.Default.FilterList,
+                            contentDescription = "Filter Kategori",
+                            tint = if (selectedCategory != null) 
+                                Color(selectedCategory.color)
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showCategoryDropdown,
+                        onDismissRequest = { showCategoryDropdown = false },
+                        modifier = Modifier
+                            .heightIn(max = 400.dp)
+                            .widthIn(min = 200.dp)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Semua Kategori") },
+                            onClick = {
+                                viewModel.selectCategory(null)
+                                showCategoryDropdown = false
+                            },
+                            trailingIcon = if (filterState.selectedCategoryId == null) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            } else null
+                        )
+                        
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                       
+                        Text(
+                            text = "PENGELUARAN",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                        
+                        expenseCategories.forEach { category ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .background(
+                                                    Color(category.color).copy(alpha = 0.15f),
+                                                    RoundedCornerShape(8.dp)
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = getCategoryIcon(category.icon),
+                                                contentDescription = null,
+                                                tint = Color(category.color),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        Text(
+                                            text = category.name,
+                                            fontWeight = if (filterState.selectedCategoryId == category.id) 
+                                                FontWeight.SemiBold else FontWeight.Normal
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    viewModel.selectCategory(category.id)
+                                    showCategoryDropdown = false
+                                },
+                                trailingIcon = if (filterState.selectedCategoryId == category.id) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = Color(category.color)
+                                        )
+                                    }
+                                } else null
+                            )
+                        }
+                        
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                        Text(
+                            text = "PEMASUKAN",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF4CAF50),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                        
+                        incomeCategories.forEach { category ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .background(
+                                                    Color(category.color).copy(alpha = 0.15f),
+                                                    RoundedCornerShape(8.dp)
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = getCategoryIcon(category.icon),
+                                                contentDescription = null,
+                                                tint = Color(category.color),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        Text(
+                                            text = category.name,
+                                            fontWeight = if (filterState.selectedCategoryId == category.id) 
+                                                FontWeight.SemiBold else FontWeight.Normal
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    viewModel.selectCategory(category.id)
+                                    showCategoryDropdown = false
+                                },
+                                trailingIcon = if (filterState.selectedCategoryId == category.id) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = Color(category.color)
+                                        )
+                                    }
+                                } else null
                             )
                         }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                singleLine = true
-            )
+                }
+            }
 
             Row(
                 modifier = Modifier
@@ -183,8 +356,8 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilterChip(
-                    selected = filterState.startDate == null && filterState.selectedCategoryId == null,
-                    onClick = { viewModel.clearFilters() },
+                    selected = filterState.startDate == null,
+                    onClick = { viewModel.setDateRange(null, null) },
                     label = { Text("Semua Waktu") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primary,
@@ -223,24 +396,6 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
                 )
-
-                categories.take(3).forEach { category ->
-                    FilterChip(
-                        selected = filterState.selectedCategoryId == category.id,
-                        onClick = {
-                            if (filterState.selectedCategoryId == category.id) {
-                                viewModel.selectCategory(null)
-                            } else {
-                                viewModel.selectCategory(category.id)
-                            }
-                        },
-                        label = { Text(category.name.split(" ").first()) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(category.color),
-                            selectedLabelColor = Color.White
-                        )
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
